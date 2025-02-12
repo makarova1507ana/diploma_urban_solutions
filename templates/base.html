@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Городские решения</title>
+    <!-- Используем тег Django для подключения статики -->
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <a href="{% url 'index' %}"><div class="logo">Городские решения</div></a>
+        <nav>
+            <a href="#">Карта</a>
+            <a href="#">Темы</a>
+            <a href="#">Результаты</a>
+            <a href="#">О портале</a>
+        </nav>
+
+        <!-- Поиск -->
+        <div class="search_block">
+          <form method="get">
+            <input type="search" name="text" class="search" placeholder="Поиск">
+            <input type="submit" name="submit" class="submit" value="🔍︎">
+          </form>
+        </div>
+
+        <div class="sign-in">
+          <a href="{% url 'users:login' %}">👤Войти</a>
+        </div>
+
+        <div class="language">
+            <span style="margin-left: 10px; cursor: pointer;" class="language-selector">русский</span>
+            <ul class="language-options">
+                <li><a href="#">Русский</a></li>
+                <li><a href="#">English</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="main">
+        {% block content %}
+        <!-- Контент будет переопределен в дочерних шаблонах -->
+        {% endblock %}
+    </main>
+
+   <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">О проекте</a>
+                <a href="#">Сообщить о проблеме</a>
+                <a href="#">Итоги работы</a>
+                <a href="mailto:ag@mail.orb.ru">По всем вопросам и предложениям обращайтесь</a>
+            </div>
+            <div class="footer-sections">
+                <div>
+                    <h3>Самые лучшие решения</h3>
+                </div>
+
+                <div>
+                    <h3>Как это работает?</h3>
+                </div>
+                <div class="footer-support">
+                    <h3>Написать в техподдержку</h3>
+                    <a href="mailto:support@mail.com">support@mail.com</a>
+                </div>
+            </div>
+        </div>
+   </footer>
+
+   <script src="{% static 'script.js' %}"></script>
+</body>
+</html>

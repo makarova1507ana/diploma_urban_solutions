@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="main-header">
+    <h1>Главная</h1>
+    <button class="report-btn">Сообщить о проблеме</button>
+</div>
+<div class="main-container">
+    <div class="stats">
+        <div class="stat-item">
+            <p class="result">1 010</p>
+            <p class="description">Решено проблем</p>
+        </div>
+        <div class="stat-item">
+            <p class="result">10 100</p>
+            <p class="description">Зарегистрировано пользователей</p>
+        </div>
+    </div>
+
+    <div class="image-section">
+        <!-- Используем Django тег для медиафайлов -->
+        <img src="{% static 'images/default.jpeg' %}" alt="Городской пейзаж">
+    </div>
+</div>
+
+<div class="main-end">
+    <h2>Результаты работы портала</h2>
+    <section class="results">
+        <!-- Пример использования цикла для динамически генерируемых карточек -->
+        {% for result in results %}
+        <div class="result-card">
+            <div class="image-container">
+                <!-- Используем динамические изображения из контекста -->
+                <img src="{{ result.image.url }}" alt="{{ result.title }}">
+                <div class="overlay">Посмотреть</div>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

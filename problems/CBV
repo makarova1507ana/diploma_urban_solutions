@@ -1,0 +1,67 @@
+from django.http import HttpResponseNotFound
+from django.shortcuts import render, redirect
+from django.views import View
+from films.models import Genre, Movie
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .forms import SuggestGenreForm
+
+class PageNotFoundView(View):
+    def get(self, request, exception):
+        return HttpResponseNotFound('<center><h1>Страница не найдена</h1></center>')
+
+class IndexView(View):
+    def get(self, request):
+        return render(request, 'films/index.html')
+
+class SuggestGenreView(View):
+    def get(self, request):
+        form = SuggestGenreForm()
+        return render(request, 'films/suggestion.html', {'form': form})
+
+    def post(self, request):
+        form = SuggestGenreForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                form.save()
+                return redirect("/cats/")
+            except:
+                form.add_error(None, "Ошибка добавления данных")
+        return render(request, 'films/suggestion.html', {'form': form})
+
+class CategoriesView(View):
+    def get(self, request):
+        genres = Genre.objects.all()
+        return render(request, 'films/categories.html', {'genres': genres})
+
+class MovieInfoView(View):
+    def get_info_movie(self, id_movie):
+        # ваша логика для получения данных о фильме из API
+        pass
+
+    def get(self, request, id_movie):
+        data = self.get_info_movie(id_movie)
+        return render(request, 'films/info_movie.html', data)
+
+class SearchMoviesView(View):
+    def get(self, request):
+        movies_list = Movie.objects.all()
+        paginator = Paginator(movies_list, 10)
+        page = request.GET.get('page')
+        try:
+            movies = paginator.page(page)
+        except PageNotAnInteger:
+            movies = paginator.page(1)
+        except EmptyPage:
+            movies = paginator.page(paginator.num_pages)
+
+        data = {'movies': movies, 'count': len(movies_list)}
+        return render(request, 'films/search_movie.html', data)
+
+class ArchiveView(View):
+    def get(self, request, year):
+        return HttpResponse(f"archive {year}")
+
+class TransactionView(View):
+    def post(self, request):
+        # ваша логика для обработки транзакции
+        pass

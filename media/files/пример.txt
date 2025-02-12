@@ -1,0 +1,26 @@
+
+import telebot
+import random
+from telebot import types
+bot = telebot.TeleBot("6441896458:AAHQIpM07-s9pvIF31rU3gsMt__roBih0mg")
+def generate_buttons(bts_names, markup):
+     for button in bts_names:
+         markup.add(types.KeyboardButton(button))
+     return markup
+
+@bot.message_handler(commands=['start'])
+def get_message(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("👋 Поздороваться")
+    btn2 = types.KeyboardButton("❓ Задать вопрос")
+    btn3 = types.KeyboardButton("🎲 Случайное число")
+    markup.add(btn1, btn2, btn3)
+    bot.send_message(message.chat.id,text="Хочешь поиграть?! Чтобы начать игру /start_game".format(message.from_user), reply_markup=markup)
+
+
+@bot.message_handler(regexp='(👋 Поздороваться)|(❓ Задать вопрос)|(🎲 Случайное число)')
+def message_reply(message):
+    if message.text == "👋 Поздороваться":
+        bot.send_message(message.chat.id, "Здраствуй, ты кто? Никто? Я так и знал!")
+
+bot.polling(none_stop=True, interval=0)

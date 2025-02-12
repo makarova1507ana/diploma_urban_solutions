@@ -1,0 +1,47 @@
+
+html[data-theme="light"], :root {
+  --primary: #9774d5;
+  --secondary: #785cab;
+  --link-fg: #7c449b;
+  --link-selected-fg: #8f5bb2;
+}
+
+
+
+/* Dark Theme */
+html[data-theme="dark"], :root {
+  --primary: #785cab;
+  --secondary: #9774d5;
+  --link-fg: #7c449b;
+  --link-selected-fg: #8f5bb2;
+
+  /* Дополнительные стили */
+  /* Например, инвертированные цвета для текста и фона */
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Пример изменения цвета при наведении на ссылки */
+a {
+  color: var(--link-fg); /* Цвет ссылки по умолчанию */
+  transition: color 0.3s ease; /* Анимация смены цвета */
+}
+
+a:hover {
+  color: var(--link-selected-fg); /* Цвет ссылки при наведении */
+}
+
+
+/* Пример изменения цвета кнопки submit при наведении */
+input[type="submit"] {
+  background-color: var(--primary); /* Цвет фона кнопки submit по умолчанию */
+  color: #fff; /* Цвет текста кнопки submit по умолчанию */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Анимация смены цвета */
+  border: none; /* Удаление границы кнопки (если нужно) */
+  padding: 8px 16px; /* Задайте отступы по вашему желанию */
+}
+
+input[type="submit"]:hover {
+  background-color: var(--secondary); /* Цвет фона кнопки submit при наведении */
+  color: #fff; /* Цвет текста кнопки submit при наведении */
+}

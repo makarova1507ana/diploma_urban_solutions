@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+  <style>
+    /* Стили из второго примера */
+    body {
+
+      height: 100vh;
+
+    }
+
+    h1 {
+      text-align: center;
+
+    }
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Регистрация</h1>
+    <form method="post" class="register-form">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <!-- Вывод ошибок, не привязанных к конкретному полю -->
+      <div class="form-error">{{ form.non_field_errors }}</div>
+
+      <!-- Блок «Личные данные» и «Контактные данные» -->
+      <div class="form-section">
+        <div class="column">
+          <h3>Личные данные</h3>
+          <label for="{{ form.full_name.id_for_label }}">ФИО</label>
+          {{ form.full_name }}
+          <div class="form-error">{{ form.full_name.errors }}</div>
+
+          <label for="{{ form.address.id_for_label }}">Мой адрес</label>
+          {{ form.address }}
+          <div class="form-error">{{ form.address.errors }}</div>
+
+          <label for="{{ form.district.id_for_label }}">Район</label>
+          {{ form.district }}
+          <div class="form-error">{{ form.district.errors }}</div>
+        </div>
+
+        <div class="column">
+          <h3>Контактные данные</h3>
+          <label for="{{ form.phone_number.id_for_label }}">Номер телефона</label>
+          {{ form.phone_number }}
+          <div class="form-error">{{ form.phone_number.errors }}</div>
+
+          <label for="{{ form.email.id_for_label }}">Электронная почта</label>
+          {{ form.email }}
+          <div class="form-error">{{ form.email.errors }}</div>
+
+          <label for="{{ form.contact_method.id_for_label }}">Предпочитаемый способ связи</label>
+          {{ form.preferred_contact }}
+          <div class="form-error">{{ form.preferred_contact.errors }}</div>
+        </div>
+      </div>
+
+      <!-- Блок «Безопасность» и «Документы» -->
+      <div class="form-section">
+        <div class="column">
+          <h3>Безопасность</h3>
+          <p>Пароль должен содержать:</p>
+          <ul>
+            <li>Не менее 8 символов</li>
+            <li>Хотя бы 1 символ: .#!%$*@</li>
+            <li>Хотя бы 1 цифру</li>
+            <li>Хотя бы 1 заглавную букву</li>
+          </ul>
+          <label for="{{ form.password1.id_for_label }}">Пароль</label>
+          {{ form.password1 }}
+          <div class="form-error">{{ form.password1.errors }}</div>
+
+          <label for="{{ form.password2.id_for_label }}">Подтвердите Пароль</label>
+          {{ form.password2 }}
+          <div class="form-error">{{ form.password2.errors }}</div>
+        </div>
+
+        <div class="column" id="documents">
+          <h3>Документы</h3>
+
+          <span>
+            <input type="checkbox" name="agreement" value="True" class="form-input">
+           <label>
+             Я принимаю условия Соглашения
+           </label></span>
+
+          <div class="form-error" id="agreement"></div>
+
+          <span>
+            <input type="checkbox" name="moderation" value="True" class="form-input">
+           <label> Я ознакомлен(а) с правилами модерации</label>
+          </span>
+
+          <div class="form-error" id="moderation"></div>
+
+          <span>
+            <input type="checkbox" name="regulation" value="True" class="form-input">
+            <label>Я ознакомлен(а) с регламентом обработки</label>
+          </span>
+
+          <div class="form-error" id="regulation"></div>
+
+          <span>
+            <input type="checkbox" name="personal_data" value="True" class="form-input">
+            <label>Я ознакомлен(а) с обработкой персональных данных</label>
+          </span>
+          <div class="form-error" id="personal_data"></div>
+        </div>
+      </div>
+
+          <div class="button-container">
+        <input type="submit" class="btn" value="Зарегистрироваться">
+      </div>
+      <p class="login-link">
+        <a href="{% url 'users:login' %}">Уже зарегистрированы?</a>
+      </p>
+    </form>
+  </div>
+</body>
+</html>
+
+

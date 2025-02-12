@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+<style>
+    body {
+      height: 100vh;
+      display: flex; /* Используем Flexbox */
+      justify-content: center; /* Горизонтальное выравнивание по центру */
+      align-items: center; /* Вертикальное выравнивание по центру */
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Добро пожаловать!</h1>
+
+  <p>Вы успешно зарегистрировались на сайте! Для входа в систему необходимо авторизоваться по этой
+    <a href="{% url 'users:login' %}">ссылке</a>
+  </p>
+</body>
+</html>
