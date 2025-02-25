@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Сообщить о проблеме{% endblock %}
+
+{% block pageTitle %}
+    Сообщить о проблеме
+{% endblock %}
+
+{% block content %}
+<div>
+    <h2>Шаг 1: Где была обнаружена проблема?</h2>
+    <h2>Шаг 2: В чем проблема?</h2>
+    <h2>Шаг 3: Опишите проблему</h2>
+</div>
+<div class="step3-container">
+    <h2>Подтвердите информацию</h2>
+
+    <form method="POST" action="{% url 'reports:step3' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Отображение данных перед отправкой -->
+        <p><strong>Тема:</strong> {{ topic.title }}</p>
+        <input type="hidden" name="topic_id" value="{{ topic.id }}">
+
+        <p><strong>Широта:</strong> {{ latitude }}</p>
+        <input type="hidden" name="latitude" value="{{ latitude }}">
+
+        <p><strong>Долгота:</strong> {{ longitude }}</p>
+        <input type="hidden" name="longitude" value="{{ longitude }}">
+
+        <p><strong>Адрес:</strong> {{ address }}</p>
+        <input type="hidden" name="address" value="{{ address }}">
+
+        <!-- Описание проблемы -->
+        <label for="description">Описание (необязательно, не более 350 символов):</label>
+        <textarea id="description" name="description" maxlength="350"></textarea>
+
+        <!-- Поле для загрузки изображений -->
+        <p>
+            <label for="images">Выберите или перетащите фотографию / группу фотографий:</label>
+            <input id="images" type="file" name="images" accept=".jpg, .jpeg, .png, .heic, .heif" multiple>
+        </p>
+        <p>Фотографий должно быть не больше 5 штук, форматом JPG, JPEG, PNG, HEIC, HEIF, размером не более 5 МБ каждая.</p>
+
+        <button type="submit">Отправить отчет</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById("images").addEventListener("change", function(event) {
+        if (this.files.length > 5) {
+            alert("Вы можете загрузить не более 5 изображений.");
+            this.value = "";
+        }
+    });
+</script>
+
+{% endblock %}

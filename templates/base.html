@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 {% load static %}
+{% load custom_filters %}
+
+
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Городские решения</title>
+    <title>{% block title %} {% endblock %}</title>
     <!-- Используем тег Django для подключения статики -->
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block additionalHead %} {% endblock %}
 </head>
 <body>
     <header>
         <a href="{% url 'index' %}"><div class="logo">Городские решения</div></a>
         <nav>
             <a href="#">Карта</a>
-            <a href="#">Темы</a>
+            <a href="{% url 'reports:topics' %}">Темы</a>
             <a href="#">Результаты</a>
-            <a href="#">О портале</a>
+            <a href="#" style="white-space: nowrap;">О портале</a>
         </nav>
 
         <!-- Поиск -->
@@ -27,8 +31,29 @@
         </div>
 
         <div class="sign-in">
-          <a href="{% url 'users:login' %}">👤Войти</a>
+            {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="dropbtn">👤{{ user.full_name|split_first }}</button>
+                    <div class="dropdown-content">
+                        <form method="get" action="{% url 'users:profile' %}">
+                            <button type="submit">Профиль</button>
+                        </form>
+                        <form method="post" action="{% url 'users:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit">Выйти</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'users:login' %}">👤Войти</a>
+            {% endif %}
         </div>
+
+
+
+
+
+
 
         <div class="language">
             <span style="margin-left: 10px; cursor: pointer;" class="language-selector">русский</span>
@@ -40,6 +65,17 @@
     </header>
 
     <main class="main">
+        <div class="main-header">
+            <h1>{% block pageTitle %}{% endblock %}</h1>
+            {% if not hide_report_button %}
+                 <form method="get" action="{% url 'reports:step1' %}">
+                     {% csrf_token %}
+                     <button class="report-btn" type="submit">Сообщить о проблеме</button>
+                 </form>
+            {% endif %}
+
+        </div>
+
         {% block content %}
         <!-- Контент будет переопределен в дочерних шаблонах -->
         {% endblock %}
@@ -69,6 +105,8 @@
         </div>
    </footer>
 
-   <script src="{% static 'script.js' %}"></script>
+   <script src="{% static 'js/script.js' %}"></script>
+    {% block scripts %} {% endblock %}
+
 </body>
 </html>

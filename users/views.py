@@ -49,13 +49,7 @@ class LoginUser(LoginView):
     extra_context = {'title': 'Авторизация'}  # Дополнительные контекстные данные
 
     def get_success_url(self):
-        return reverse_lazy('problems:index')  # Перенаправление пользователя после успешного входа
-
-# страница для просмотра учетной записи пользователя (требует авторизации)
-@login_required(login_url='/users/login/')  # Перенаправление неавторизованных пользователей
-def account(request):
-    # только авторизованным пользователям доступна страница
-    return render(request, 'users/account.html')
+        return reverse_lazy('index')  # Перенаправление пользователя после успешного входа
 
 # страница для регистрации пользователя
 class RegisterUser(CreateView):

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Темы{% endblock %}
+
+{% block pageTitle %}
+Список тем{% endblock %}
+
+{% block content %}
+<div class="topics-list">
+    <div class="search-container">
+        <input type="text" id="search" class="search-input" placeholder="Поиск темы...">
+    </div>
+    {% if topics %}
+        <ul>
+            {% for topic in topics %}
+                <a href="{% url 'reports:topic_detail' topic.pk %}"><li class="topic-item">
+                    {{ topic.title }}
+                </li></a>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Темы пока не добавлены.</p>
+    {% endif %}
+</div>
+{% endblock %}
+

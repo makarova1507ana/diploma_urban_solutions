@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Сообщить о проблеме{% endblock %}
+
+{% block pageTitle %}
+    Сообщить о проблеме
+{% endblock %}
+
+{% block content %}
+<div>
+    <h2>Шаг 1: Где была обнаружена проблема?</h2>
+    <h2>Шаг 2: В чем проблема?</h2>
+    <h2>Шаг 3: Опишите проблему</h2>
+</div>
+
+<div class="step2-container">
+    <form id="problemForm" method="GET" action="{% url 'reports:step3' %}">
+        {% csrf_token %}
+
+        <div class="topics-list">
+            {% if topics %}
+                <ul>
+                    {% for topic in topics %}
+                        <li class="topic-item-container">
+                            <button type="button" class="topic-item"
+                                    data-topic-id="{{ topic.pk }}"
+                                    data-lat="{{ request.session.lat }}"
+                                    data-lon="{{ request.session.lon }}"
+                                    data-title="{{ topic.title }}"
+                                    data-description="{{ topic.description }}">
+                                {{ topic.title }}
+                            </button>
+                            <button type="button" class="toggle-description">↓</button>
+                            <div class="topic-description" style="display: none;">
+                                <p>{{ topic.description }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Темы пока не добавлены.</p>
+            {% endif %}
+        </div>
+
+        <input type="hidden" id="latitude" name="latitude" placeholder="Широта" value="{{ request.session.lat }}" readonly required>
+        <input type="hidden" id="longitude" name="longitude" placeholder="Долгота" value="{{ request.session.lon }}" readonly required>
+    </form>
+</div>
+
+<script>
+document.querySelectorAll('.topic-item').forEach(function(button) {
+    button.addEventListener('click', function() {
+        var topicId = button.getAttribute('data-topic-id');
+        console.log("Выбрана тема:", topicId); // для отладки
+
+        // Обновляем поля формы
+        var lat = button.getAttribute('data-lat');
+        var lon = button.getAttribute('data-lon');
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lon;
+
+        // Добавляем скрытое поле для выбранной темы
+        var topicInput = document.createElement('input');
+        topicInput.type = 'hidden';
+        topicInput.name = 'selected_topic';
+        topicInput.value = topicId;
+        document.getElementById('problemForm').appendChild(topicInput);
+
+        // Устанавливаем значения в сессию
+        sessionStorage.setItem('latitude', lat);
+        sessionStorage.setItem('longitude', lon);
+        sessionStorage.setItem('selected_topic', topicId);
+
+        // Отправляем форму
+        document.getElementById('problemForm').submit();
+    });
+});
+
+// Отображение/скрытие описания темы
+document.querySelectorAll('.toggle-description').forEach(function(button) {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        var description = button.closest('.topic-item-container').querySelector('.topic-description');
+        description.style.display = description.style.display === 'none' ? 'block' : 'none';
+    });
+});
+</script>
+
+{% endblock %}

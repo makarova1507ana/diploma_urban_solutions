@@ -1,10 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# Кастомная модель пользователя на основе AbstractUser
+# Кастомная модель пользователя
 class User(AbstractUser):
-    username = None  # убираем поле username
-    email = models.EmailField('email address', unique=True)
+    email = models.EmailField('email address', unique=True)  # Уникальный email
     role = models.CharField(max_length=50, blank=True, null=True)
     full_name = models.CharField(max_length=255, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -23,8 +22,15 @@ class User(AbstractUser):
         null=True
     )
 
+    # Устанавливаем email как основной идентификатор для аутентификации
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []  # дополнительные обязательные поля можно указать здесь
+    REQUIRED_FIELDS = ['username']  # Оставляем 'username' как обязательное поле для создания пользователя
+
+    def save(self, *args, **kwargs):
+        """Перед сохранением заполняем поле username значением email"""
+        if not self.username:
+            self.username = self.email
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'users'

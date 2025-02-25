@@ -14,9 +14,6 @@ urlpatterns = [
     # Выход пользователя
     path('logout/', LogoutView.as_view(), name='logout'),
 
-    # Просмотр учетной записи пользователя
-    path('account/', views.account, name='account'),
-
     # Изменение пароля пользователя
     path('password-change/', views.UserPasswordChange.as_view(), name="password_change"),
     path('password-change/done/', PasswordChangeDoneView.as_view(template_name="users/password_change_done.html"),
@@ -47,5 +44,5 @@ urlpatterns = [
     path('register/', views.RegisterUser.as_view(), name='register'),
 
     # Профиль пользователя (закомментирован, так как не реализован)
-    # path('profile/', views.ProfileUser.as_view(), name='profile'),
+    path('profile/', views.ProfileUser.as_view(), name='profile'),
 ]

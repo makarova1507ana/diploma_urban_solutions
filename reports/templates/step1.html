@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Сообщить о проблеме{% endblock %}
+
+{% block additionalHead %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
+
+{% endblock %}
+
+{% block pageTitle %}
+Сообщить о проблеме
+{% endblock %}
+
+{% block content %}
+<style>
+/* Скрыть только атрибуцию Leaflet */
+.leaflet-control-attribution a:nth-child(1) {
+    display: none !important;
+}
+</style>
+<div>
+    <h2>Шаг 1: Где была обнаружена проблема?
+</h2>
+    <h2>Шаг 2: В чем проблема?
+</h2>
+    <h2>Шаг 3: Опишите проблему
+</h2>
+</div>
+    <!-- Элемент для отображения карты -->
+    <div id="map" style="width: 1000px; height: 500px;"></div>
+
+    <!-- Строка поиска по адресу -->
+    <div class="search-container">
+        <input style="width: 1000px;" type="text" id="address-search" placeholder="Введите адрес для поиска">
+    </div>
+
+    <!-- Форма подтверждения выбора -->
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="lat" id="lat">
+        <input type="hidden" name="lon" id="lon">
+        <button type="submit" id="confirm-button">Подтвердить</button>
+    </form>
+{% endblock %}
+
+
+{% block scripts %}
+    <!-- Подключаем скрипты Leaflet и автозаполнение для поиска -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"></script>
+    <script src="{% static 'js/map.js' %}"></script>
+{% endblock %}
+

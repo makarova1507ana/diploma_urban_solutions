@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ topic.title }}{% endblock %}
+
+{% block pageTitle %}
+{{ topic.title }}
+{% endblock %}
+
+{% block content %}
+<div class="topic-detail">
+
+    <p>{{ topic.description }}</p>
+
+    <h2>Примеры проблем по теме</h2>
+    <ul>
+        <li>Пример проблемы 1 по теме "{{ topic.title }}"</li>
+        <li>Пример проблемы 2 по теме "{{ topic.title }}"</li>
+        <li>Пример проблемы 3 по теме "{{ topic.title }}"</li>
+    </ul>
+
+    <a href="{% url 'reports:topics' %}">Вернуться к списку тем</a>
+</div>
+{% endblock %}

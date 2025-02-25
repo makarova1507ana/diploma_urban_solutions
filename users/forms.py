@@ -82,21 +82,28 @@ class RegisterUserForm(UserCreationForm):
 
 
 class ProfileUserForm(forms.ModelForm):
-    username = forms.CharField(disabled=True, label='Логин', widget=forms.TextInput(attrs={'class': 'form-input'}))
-    email = forms.CharField(disabled=True, label='E-mail', widget=forms.TextInput(attrs={'class': 'form-input'}))
+    email = forms.CharField(label='E-mail', widget=forms.TextInput(attrs={'class': 'form-input'}))
+    full_name = forms.CharField(label='ФИО', widget=forms.TextInput(attrs={'class': 'form-input'}))
+    role = forms.CharField(label='Роль', widget=forms.TextInput(attrs={'class': 'form-input'}), required=False)
+    address = forms.CharField(label='Адрес', widget=forms.Textarea(attrs={'class': 'form-input'}), required=False)
+    phone_number = forms.CharField(label='Телефон', widget=forms.TextInput(attrs={'class': 'form-input'}),
+                                   required=False)
+    district = forms.CharField(label='Район', widget=forms.TextInput(attrs={'class': 'form-input'}), required=False)
+    preferred_contact = forms.ChoiceField(
+        label="Предпочитаемый способ связи",
+        choices=[('email', 'Email'), ('phone', 'Телефон'), ('sms', 'СМС')],
+        widget=forms.Select(attrs={'class': 'form-input'}), required=False
+    )
 
     class Meta:
         model = get_user_model()
-        fields = ['username', 'email', 'first_name', 'last_name']
-        labels = {
-            'first_name': 'Имя',
-            'last_name': 'Фамилия',
-        }
+        fields = ['email', 'full_name', 'role', 'address', 'phone_number', 'district',
+                  'preferred_contact']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-input'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-input'}),
-        }
+            'full_name': forms.TextInput(attrs={'class': 'form-input'}),
 
+            'address': forms.Textarea(attrs={'class': 'form-input'}),
+        }
 
 class UserPasswordChangeForm(PasswordChangeForm):
     old_password = forms.CharField(label="Старый пароль", widget=forms.PasswordInput(attrs={'class': 'form-input'}))
