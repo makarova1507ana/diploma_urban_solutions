@@ -16,10 +16,10 @@
     <header>
         <a href="{% url 'index' %}"><div class="logo">Городские решения</div></a>
         <nav>
-            <a href="#">Карта</a>
+            <a href="{% url 'reports:map' %}">Карта</a>
             <a href="{% url 'reports:topics' %}">Темы</a>
-            <a href="#">Результаты</a>
-            <a href="#" style="white-space: nowrap;">О портале</a>
+            <a href="{% url 'reports:reports' %}">Результаты</a>
+            <a href="{% url 'about' %}" style="white-space: nowrap;">О портале</a>
         </nav>
 
         <!-- Поиск -->
@@ -84,9 +84,9 @@
    <footer>
         <div class="footer-content">
             <div class="footer-links">
-                <a href="#">О проекте</a>
-                <a href="#">Сообщить о проблеме</a>
-                <a href="#">Итоги работы</a>
+                <a href="{% url 'about' %}">О проекте</a>
+                <a href="{% url 'reports:step1' %}">Сообщить о проблеме</a>
+                <a href="{% url 'reports:reports' %}">Итоги работы</a>
                 <a href="mailto:ag@mail.orb.ru">По всем вопросам и предложениям обращайтесь</a>
             </div>
             <div class="footer-sections">

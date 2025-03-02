@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+{% block additionalHead %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
+
+{% endblock %}
+{% block title %}Карта{% endblock %}
+
+{% block pageTitle %}
+Карта
+{% endblock %}
+
+{% block content %}
+
+<!-- Контейнер для карты -->
+<div id="map" style="height: 600px;"></div>
+
+<!-- Панель для отображения подробной информации о проблеме -->
+<div id="infoPanel" style="padding: 10px; background-color: #f9f9f9; border-top: 2px solid #ddd; font-size: 16px;">
+    <h4>Подробности о проблеме</h4>
+    <div id="problemTitle"><strong>Выберите маркер для подробной информации</strong></div>
+    <div id="problemStatus"></div>
+    <div id="problemDescription"></div>
+    <div id="problemPhoto"></div>
+    <div id="problemDate"></div>
+    <a id="problemLink" href="#"  style="display:none;">Перейти к проблеме</a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+// Инициализация карты
+var map = L.map('map').setView([48.7080, 44.5133], 10); // Центр карты: Волгоград
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// Добавляем маркеры для каждой проблемы
+{% for report in reports %}
+    var marker = L.marker([{{ report.latitude }}, {{ report.longitude }}]).addTo(map)
+        .bindPopup("<b>{{ report.title }}</b><br>{{ report.description }}")
+        .on('click', function() {
+            // При клике на маркер обновляем информацию в панели
+            document.getElementById("problemTitle").innerHTML = "<strong>" + "{{ report.title }}" + "</strong>";
+            document.getElementById("problemStatus").innerHTML = "<strong>Статус:</strong> {{ report.get_status_display }}";
+            document.getElementById("problemDescription").innerHTML = "<strong>Описание:</strong> {{ report.description }}";
+
+            {% if report.photo %}
+                document.getElementById("problemPhoto").innerHTML = "<strong>Фото:</strong><br><img src='{{ report.photo.url }}' style='max-width: 100%; height: auto;'/>";
+            {% else %}
+                document.getElementById("problemPhoto").innerHTML = "<strong>Фото:</strong> Нет фото";
+            {% endif %}
+
+            document.getElementById("problemDate").innerHTML = "<strong>Дата создания:</strong> {{ report.created_at }}<br><strong>Дата обновления:</strong> {{ report.updated_at }}";
+            document.getElementById("problemLink").href = "{% url 'reports:report_detail' report.pk %}";
+            document.getElementById("problemLink").style.display = "block"; // Показываем ссылку
+        });
+{% endfor %}
+
+// Добавляем подпись сверху карты
+L.control({position: 'topright'}).onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info');
+    div.innerHTML = '<h4>Проблемы города Волгограда</h4>';
+    return div;
+}.addTo(map);
+
+</script>
+{% endblock %}

@@ -225,7 +225,7 @@ form:hover > .search {
 
 /* ----------------------Главное содержимое страницы -------------------- */
 .main {
-    height:100%;
+    min-height:70vh;
 
     padding: 20px;
 }
@@ -237,6 +237,51 @@ form:hover > .search {
     margin-bottom: 20px;
 }
 
+.image-section a{
+    margin-bottom:  auto;
+}
+
+.report {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.report  .report-info {
+  max-width: 60%;  /* Ограничиваем ширину информации */
+}
+
+.report  .image-container {
+  max-width: 35%;  /* Ограничиваем ширину изображения */
+  min-height: max-content;
+  position: relative;
+}
+
+.report  .image-container img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  display: none;
+}
+
+.report  .image-container:hover .overlay {
+  display: block;
+}
+
+.col-md-12.mb-4{
+margin-bottom: 10px;
+}
 .report-btn {
     font-size: 2em;
     padding: 10px 20px;
@@ -304,9 +349,14 @@ h1 {
 
 .image-container {
     position: relative;
-    width: 100%;
-    height: 200px;
     overflow: hidden;
+}
+
+.result-card .image-container{
+max-height: 200px;
+}
+.result-card .image-container img{
+max-height: 170px;
 }
 
 .image-container img {

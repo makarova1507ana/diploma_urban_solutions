@@ -10,34 +10,70 @@
 <div class="main-container">
     <div class="stats">
         <div class="stat-item">
-            <p class="result">1 010</p>
+            <p class="result">{{ resolved_reports_count }}</p>
             <p class="description">Решено проблем</p>
         </div>
+
         <div class="stat-item">
-            <p class="result">10 100</p>
+            <p class="result">{{ users_count }}</p>
             <p class="description">Зарегистрировано пользователей</p>
         </div>
+
     </div>
 
     <div class="image-section">
-        <!-- Используем Django тег для медиафайлов -->
-        <img src="{% static 'images/default.jpeg' %}" alt="Городской пейзаж">
+
+        <!-- Самая популярная категория и случайная проблема по ней -->
+        {% if most_common_topic %}
+        <a href="{% url 'reports:report_detail' random_report.id %}">
+            <div class="most-common-category">
+
+                <div class="image-container">
+                    {% with random_report.images.first as image %}
+
+                    {% if image %}
+                    <img src="{{ image.image.url }}" alt="Городской пейзаж">
+                    {% else %}
+                    <img src="{% static 'images/1.jpg' %}" alt="Default Image">
+                    {% endif %}
+                    <div class="overlay">Посмотреть</div>
+
+                    {% endwith %}
+                </div>
+                <h2>Самая популярная тема: {{ most_common_topic }}</h2>  <!-- Отображаем название темы -->
+                <h3 class="report-title">{{ random_report.title }}</h3>
+            </div>
+        </a>
+        {% endif %}
     </div>
 </div>
 
 <div class="main-end">
     <h2>Результаты работы портала</h2>
     <section class="results">
-        <!-- Пример использования цикла для динамически генерируемых карточек -->
-        {% for result in results %}
+
+
+        {% for report in reports %}
         <div class="result-card">
             <div class="image-container">
-                <!-- Используем динамические изображения из контекста -->
-                <img src="{{ result.image.url }}" alt="{{ result.title }}">
-                <div class="overlay">Посмотреть</div>
+                {% with report.images.first as image %}
+                <a href="{% url 'reports:report_detail' report.id %}">
+                    {% if image %}
+                    <img src="{{ image.image.url }}" alt="{{ report.title }}">
+                    {% else %}
+                    <img src="{% static 'images/1.jpg' %}" alt="Default Image">
+                    {% endif %}
+                    <div class="overlay">Посмотреть</div>
+                </a>
+                {% endwith %}
             </div>
+            <h3 class="report-title">{{ report.title }}</h3>  <!-- Добавляем заголовок -->
+            <p class="report-status">Статус: {{ report.get_status_display }}</p>  <!-- Отображение статуса -->
+
         </div>
         {% endfor %}
+
+
     </section>
 </div>
 {% endblock %}

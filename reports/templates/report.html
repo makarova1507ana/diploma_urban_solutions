@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+{% block additionalHead %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
+{% endblock %}
+
+{% block title %}Отчет{% endblock %}
+
+{% block pageTitle %}Отчет о проблеме{% endblock %}
+
+{% block content %}
+    <div class="report-details">
+        <h2>{{ report.title }}</h2>
+
+        <!-- Показываем изображения, привязанные к отчету -->
+        <div class="image-container">
+            {% for image in report.get_images %}
+                <img src="{{ image.image.url }}" alt="Изображение проблемы" class="report-image">
+            {% endfor %}
+            {% if not report.get_images %}
+                <img src="{% static 'images/1.jpg' %}" alt="Изображение не доступно" class="report-image">
+            {% endif %}
+        </div>
+
+        <!-- Описание проблемы -->
+        {% if report.description %}
+            <p><strong>Описание:</strong> {{ report.description }}</p>
+        {% endif %}
+
+        <!-- Статус -->
+        <p><strong>Статус:</strong> {{ report.get_status_display }}</p>
+
+        <!-- Дата создания и обновления -->
+        <p><strong>Дата создания:</strong> {{ report.created_at|date:"d.m.Y H:i" }}</p>
+        {% if report.updated_at %}
+            <p><strong>Дата обновления:</strong> {{ report.updated_at|date:"d.m.Y H:i" }}</p>
+        {% endif %}
+
+        <!-- Адрес и кнопка для отображения карты -->
+        {% if report.address %}
+            <p><strong>Адрес:</strong> {{ report.address }}</p>
+            <button id="showMapButton" class="btn btn-primary">Показать на карте</button>
+        {% endif %}
+
+        <!-- Карта с маркером -->
+        <div id="map" style="height: 400px; display: none;"></div>
+
+        <!-- Комментарии -->
+        <div class="comments-section">
+            <h3>Комментарии</h3>
+            {% if report.comments.count > 0 %}
+                <ul>
+                    {% for comment in report.comments.all %}
+                        <li>
+                            <strong>{{ comment.user.username }}</strong>: {{ comment.text }} ({{ comment.created_at|date:"d.m.Y H:i" }})
+                            {% if comment.image %}
+                                <br><img src="{{ comment.image.url }}" alt="Изображение комментария" class="comment-image">
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Комментариев нет.</p>
+            {% endif %}
+        </div>
+
+        <!-- Форма добавления комментария и изображений, если пользователь авторизован -->
+        {% if user.is_authenticated %}
+            <div class="add-comment-form">
+                <h3>Оставьте комментарий:</h3>
+                <form method="POST" action="{% url 'reports:add_comment' report_id=report.id %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Поле для текста комментария -->
+                    <p>
+                        <label for="text">Ваш комментарий:</label>
+                        <textarea id="text" name="text" rows="4" cols="50" placeholder="Введите ваш комментарий...">{{ form.text.value }}</textarea>
+                    </p>
+
+                    <!-- Показываем ошибки, если они есть -->
+                    {% if errors %}
+                        <div class="errors">
+                            <ul>
+                                {% for field, error_list in errors.items %}
+                                    <li><strong>{{ field }}:</strong>
+                                        <ul>
+                                            {% for error in error_list %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Поле для загрузки изображений -->
+                    <p>
+                        <label for="images">Выберите или перетащите фотографии:</label>
+                        <input id="images" type="file" name="images" accept=".jpg, .jpeg, .png, .heic, .heif" multiple>
+                    </p>
+                    <p>Фотографий должно быть не больше 5 штук, форматом JPG, JPEG, PNG, HEIC, HEIF, размером не более 5 МБ каждая.</p>
+
+                    <button type="submit">Отправить комментарий</button>
+                </form>
+            </div>
+        {% else %}
+            <p>Чтобы оставить комментарий, пожалуйста, войдите в систему.</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    document.getElementById('showMapButton').addEventListener('click', function() {
+        var mapElement = document.getElementById('map');
+        var button = document.getElementById('showMapButton');
+
+        if (mapElement.style.display === 'none') {
+            mapElement.style.display = 'block';
+            button.textContent = 'Скрыть карту';
+
+            // Инициализация карты
+            var map = L.map(mapElement).setView([{{ report.latitude }}, {{ report.longitude }}], 13);
+
+            // Добавление OpenStreetMap Tile Layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Добавление маркера
+            L.marker([{{ report.latitude }}, {{ report.longitude }}]).addTo(map)
+                .bindPopup("<b>{{ report.title }}</b><br>{{ report.description }}")
+                .openPopup();
+        } else {
+            mapElement.style.display = 'none';
+            button.textContent = 'Показать на карте';
+        }
+    });
+</script>
+{% endblock %}

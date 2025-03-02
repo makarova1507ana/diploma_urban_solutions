@@ -5,20 +5,19 @@ import reports.views as reports
 app_name = "reports"
 
 urlpatterns = [
+    path('', reports.Reports.as_view(), name='reports'),
 
     path('topics/', reports.TopicsPage.as_view(), name='topics'),  # Создаем путь для страницы тем
     path('topics/<int:pk>/', reports.TopicDetailView.as_view(), name='topic_detail'),
     path('report/step1/', reports.Step1View.as_view(), name='step1'),
     path('report/step2/', reports.Step2View.as_view(), name='step2'),
     path('report/step3/', reports.Step3View.as_view(), name='step3'),
+    path('report/<int:pk>/', reports.ReportDetailView.as_view(), name='report_detail'),
 
-    # path('search/', reports.ProblemsList.as_view(), name='search'),
-    #
-    # path('problem/suggest/', reports.SuggestProblem.as_view()),
-    # path('problem/<int:pk>/', reports.ProblemDetailView.as_view()),
-    #
-    # path('cats/', reports.categories, name="media"),
-    #
+    path('report/<int:report_id>/add_comment/', reports.AddCommentView.as_view(), name='add_comment'),
+
+    path('report/map/', reports.Map.as_view(), name='map'),
+
     # re_path(r"^archive/(?P<year>(1|2)\d{3})/$", reports.archive),
 
 ]

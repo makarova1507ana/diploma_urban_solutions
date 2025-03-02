@@ -4,6 +4,9 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
+
+from users.models import User
 
 class Topic(models.Model):
     title = models.CharField(
@@ -25,7 +28,6 @@ class Topic(models.Model):
 
     def __str__(self):
         return self.title
-
 
 class Report(models.Model):
     # Внешний ключ на пользователя (создателя проблемы)
@@ -88,6 +90,8 @@ class Report(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('report_detail', kwargs={'pk': self.pk})
 
 # Модель для изображений, привязанных к отчету
 class ReportImage(models.Model):
@@ -96,6 +100,26 @@ class ReportImage(models.Model):
 
     def __str__(self):
         return f"Image for report {self.report.id}"
+
+
+class Comment(models.Model):
+    report = models.ForeignKey(Report, related_name='comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.report.title}"
+
+
+# Модель для изображений, привязанных к комментарию
+class CommentImage(models.Model):
+    comment = models.ForeignKey(Comment, related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="comments/")
+    image_name = models.CharField(max_length=255, unique=True, default=None)  # Новый столбец для уникального имени
+
+    def __str__(self):
+        return f"Image for comment {self.comment.id}"
 
 
 class ModerationLog(models.Model):

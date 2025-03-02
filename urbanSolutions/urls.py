@@ -5,6 +5,7 @@ from django.urls import path, include
 from .views import Index, ErrorView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 handler400 = lambda request, exception: ErrorView.as_view()(request, status_code=400)
 handler403 = lambda request, exception: ErrorView.as_view()(request, status_code=403)
@@ -16,6 +17,8 @@ urlpatterns = [
     path('', Index.as_view(), name='index'),
     path('reports/', include('reports.urls', namespace='reports')),
     path('users/', include('users.urls', namespace='users')),
+    path('about/', TemplateView.as_view(template_name='about.html'), name='about'),
+
 ]
 admin.site.site_header = "Администрирование сайта Городские решения"
 

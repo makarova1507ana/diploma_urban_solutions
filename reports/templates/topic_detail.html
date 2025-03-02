@@ -9,15 +9,43 @@
 
 {% block content %}
 <div class="topic-detail">
-
+    <h2>{{ topic.title }}</h2>
     <p>{{ topic.description }}</p>
 
-    <h2>Примеры проблем по теме</h2>
-    <ul>
-        <li>Пример проблемы 1 по теме "{{ topic.title }}"</li>
-        <li>Пример проблемы 2 по теме "{{ topic.title }}"</li>
-        <li>Пример проблемы 3 по теме "{{ topic.title }}"</li>
-    </ul>
+    <h3>Примеры отчетов по теме</h3>
+
+    <div class="row">
+        {% if related_reports %}
+            {% for report in related_reports %}
+                <div class="col-md-12 mb-4">
+                    <div class="report d-flex justify-content-between align-items-center">
+                        <div class="report-info">
+                            <h3 class="report-title">{{ report.title }}</h3>
+                            <p><strong>Статус:</strong> {{ report.get_status_display }}</p>
+                            <p><strong>Категория:</strong> {{ report.category }}</p>
+                            <p><strong>Дата создания:</strong> {{ report.created_at }}</p>
+                            <p><strong>Дата обновления:</strong> {{ report.updated_at }}</p>
+                            <p><strong>Адрес:</strong> {{ report.address }}</p>
+                        </div>
+                        <div class="image-container">
+                            {% with report.images.first as image %}
+                                <a href="{% url 'reports:report_detail' report.id %}">
+                                    {% if image %}
+                                        <img src="{{ image.image.url }}" alt="{{ report.title }}" class="img-fluid">
+                                    {% else %}
+                                        <img src="{% static 'images/1.jpg' %}" alt="Default Image" class="img-fluid">
+                                    {% endif %}
+                                    <div class="overlay">Посмотреть</div>
+                                </a>
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Нет связанных отчетов по этой теме.</p>
+        {% endif %}
+    </div>
 
     <a href="{% url 'reports:topics' %}">Вернуться к списку тем</a>
 </div>
