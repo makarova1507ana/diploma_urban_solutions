@@ -42,7 +42,6 @@ header {
 
 header nav {
    align-items: center; /* Выравниваем элементы по нижнему краю */
-   margin-bottom: 5px;
 }
 
 /* Навигационные ссылки */
@@ -51,6 +50,7 @@ header nav a {
     margin: 0 5px;
     color: inherit;
     font-weight: 600;
+    font-size: 1.1em;
 }
 
 header nav a:hover {
@@ -102,7 +102,7 @@ header .language span {
 }
 .sign-in {
     margin-left: 10px;
-
+    margin-bottom: -2px;
 
 }
 
@@ -117,18 +117,75 @@ header .language span {
     outline-offset: 0;
 }
 
+.search_block {
+    margin-top: auto;
+}
+
 .search_block form {
     display: flex;
     width: 290px;
     margin: 0 auto;
     align-items: center;
     position: relative;
+
 }
+
+/* Скрыть только атрибуцию Leaflet */
+.leaflet-control-attribution a:nth-child(1) {
+    display: none !important;
+}
+
+.steps {
+    display: flex;               /* Включаем Flexbox */
+    justify-content: space-between; /* Распределяем элементы с одинаковыми промежутками */
+    align-items: center;         /* Выравниваем по вертикали по центру */
+    margin-bottom: 5px;
+}
+
+.step {
+    text-align: center;           /* Выравнивание текста по центру */
+
+}
+
+.step h2{
+    margin: 0;
+}
+
+.circle {
+    display: inline-block;        /* Чтобы круг был внутри строки */
+    width: 40px;                  /* Размер круга */
+    height: 40px;                 /* Размер круга */
+    border-radius: 50%;           /* Округляем края, чтобы получить круг */
+    border: solid 3px #0F3272;
+    font-size: 1.5em;              /* Размер шрифта в круге */
+    line-height: 40px;            /* Выравнивание цифры по вертикали в круге */
+    padding: 5px;
+    font-weight: bold;
+}
+
+
+
+
+input::placeholder {
+    color: #0F3272;            /* Цвет текста */
+    opacity: 0.6;              /* Прозрачность (по умолчанию обычно 1) */
+}
+
 
 .search {
     width: 0; /* Начальная ширина 0, скрывает поле */
     transition: width 0.8s ease; /* Плавное увеличение ширины */
     opacity: 0; /* Скрыть по умолчанию */
+}
+
+
+.step1-form button{
+background-color: #0F3272;
+color: #fff;
+font-size: 1.5em;
+padding: 7px;
+border: solid 1px #0F3272;
+border-radius: 5px;
 }
 
 .submit {
@@ -138,7 +195,7 @@ header .language span {
     justify-content: center;
     align-items: center;
     width: 50px;
-    height: 50px;
+    height: 40px;
     border-radius: 50%;
     background-color: #69C3C300;
     border: 0;
@@ -170,7 +227,7 @@ form:hover > .search {
 .search:focus {
     margin-right: 10px;
     border-radius: 20px;
-    height: 50px;
+    height: 40px;
     border: solid #0F3272 2px;
     padding-left: 10px;
     width: 240px; /* Увеличиваем до 240px */
@@ -189,6 +246,7 @@ form:hover > .search {
     border: none;
     font-size: 16px;
     cursor: pointer;
+    color: #0F3272;
 }
 
 .dropdown-content {
@@ -205,6 +263,7 @@ form:hover > .search {
 }
 
 .dropdown-content button {
+    color: #0F3272;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
@@ -222,6 +281,9 @@ form:hover > .search {
     display: block;
 }
 
+button:hover{
+opacity: 0.7;
+}
 
 /* ----------------------Главное содержимое страницы -------------------- */
 .main {
@@ -285,7 +347,7 @@ margin-bottom: 10px;
 .report-btn {
     font-size: 2em;
     padding: 10px 20px;
-    background-color: #69C3C3;
+    background: #42EADC 30%;
     color: #0F3272;
     border: none;
     cursor: pointer;
@@ -399,11 +461,60 @@ max-height: 170px;
     align-items: center;
 }
 
+
+.step3 {
+    font-size: 1.2em;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Отступ между элементами формы */
+    font-weight: bold;
+}
+
+.step3 input, .step3 textarea, .step3 select{
+float: right;
+font-size: 1.1em;
+height: 35px;
+width: 50%;
+margin-right: 30%;
+padding: 5px;
+}
+
+.step3 input[name='address']{
+    pointer-events: none;
+    opacity: 0.8;
+    background: #ccc;
+}
+
+.step3 button{
+margin-top: 5px;
+background-color: #0F3272;
+color: #fff;
+font-size: 1.5em;
+padding: 7px;
+border: solid 1px #0F3272;
+border-radius: 5px;
+}
+
+
+
+
 .image-section img {
     width: 100%;            /* Изображение масштабируется вместе с контейнером */
     height: 100%;           /* Покрывает весь контейнер */
     object-fit: cover;      /* Масштабирует изображение, сохраняя пропорции */
     display: block;
+}
+
+.topic-item-li{
+padding:10px;
+font-size: 1.5em;
+    display: block; /* Делаем элементы блочными */
+    width: 100%; /* Растягиваем элементы по ширине родителя */
+    border: 1px solid #0F3272; /* Добавляем рамку */
+    margin-bottom: 10px; /* Отступ между элементами */
+    background-color: #f9f9f9; /* Фоновый цвет */
+    transition: background-color 0.3s ease; /* Плавный эффект при наведении */
 }
 
 .main h2{
@@ -418,30 +529,40 @@ text-align: center;
     margin: 0; /* Убираем внешние отступы */
 }
 
-.topic-item {
+.topic-item-container {
     display: block; /* Делаем элементы блочными */
     width: 100%; /* Растягиваем элементы по ширине родителя */
-    padding: 15px; /* Добавляем отступы */
-    border: 1px solid #ccc; /* Добавляем рамку */
+    border: 1px solid #0F3272; /* Добавляем рамку */
     margin-bottom: 10px; /* Отступ между элементами */
     background-color: #f9f9f9; /* Фоновый цвет */
     transition: background-color 0.3s ease; /* Плавный эффект при наведении */
 }
-
-.topic-item a {
-    text-decoration: none; /* Убираем подчеркивание */
-    color: #333; /* Цвет текста */
+.topic-item-container button{
+    background: inherit;
+    color: #0F3272;
+    height: 100%;
+    font-size: 1.5em;
+    border: 0px;
 }
 
-.topic-item:hover {
-    text-decoration: none; /* Убираем подчеркивание */
-    background-color: #f1f1f1; /* Цвет фона при наведении */
-}
+.topic-item-container .topic-item{
+    width: 95%;
 
-.topic-item a:hover {
-    text-decoration: none; /* Убираем подчеркивание */
-    color: #007bff; /* Цвет текста при наведении */
-}
+    }
+.topic-item-container .toggle-description{
+    width: 4%;
+    padding-bottom: 5px;
+      font-weight: bold;
+
+    }
+
+  .topic-description{
+  padding: 10px 20px 10px 20px;
+  text-align: justify;
+    text-justify: inter-word;
+    border-top: 1px solid #0F3272;
+
+  }
 /* Стили для контейнера поиска */
 .search-container {
     width: 100%; /* Растягиваем элементы по ширине родителя */
@@ -566,7 +687,14 @@ footer {
   font-size: 1em;
   box-sizing: border-box; /* Учитываем отступы и границы */
 }
-
+.login-form input[type="submit"] {
+    background: #0F3272;
+    color: #fff;
+    font-size: 1.5em;
+}
+.login-form input[type="submit"]:hover {
+    opacity: 0.7;
+}
 /* Стили для кнопки */
 
 .search input[type="submit"] {

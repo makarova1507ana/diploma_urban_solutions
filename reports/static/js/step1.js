@@ -8,12 +8,30 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // Начальная метка в Волгограде
 var marker = L.marker([48.7080, 44.5133]).addTo(map); // Начальный маркер в Волгограде
-marker.bindPopup("<b>Волгоград</b><br>Это стартовая метка.").openPopup();
 
 // Кэш для геокодирования
 var geocodeCache = {};
 
-// Функция для получения адреса по координатам с использованием Nominatim API
+
+// Проверка наличия данных в sessionStorage
+if (sessionStorage.getItem('location')) {
+    var locationData = JSON.parse(sessionStorage.getItem('location'));
+    var savedLat = parseFloat(locationData.lat);
+
+    var savedLon = parseFloat(locationData.lon);
+    // Устанавливаем метку на сохраненные координаты
+    marker.setLatLng([savedLat, savedLon]);
+
+    // Получаем адрес для сохраненных координат
+    reverseGeocode(savedLat, savedLon, function(address) {
+        marker.bindPopup("<b>Вы выбрали место:</b><br>" + address).openPopup();
+    });
+
+    // Обновляем строку поиска с адресом
+    document.getElementById('address-search').value = sessionStorage.getItem('address');
+}
+
+// Функция для получения адреса по координатам с использованием Nominatim API с дебаунсом
 function reverseGeocode(lat, lon, callback) {
     var coordinatesKey = `${lat.toFixed(4)}_${lon.toFixed(4)}`; // Создаем уникальный ключ для координат с округлением
     if (geocodeCache[coordinatesKey]) {
@@ -33,6 +51,9 @@ function reverseGeocode(lat, lon, callback) {
                 }
                 document.getElementById('address-search').value = address; // Обновляем строку поиска
                 callback(address); // Вызываем callback для обновления подписи метки
+
+                // Сохраняем координаты и адрес в sessionStorage
+                saveLocationToSession(lat, lon, address);
             })
             .catch(error => {
                 console.error("Ошибка геокодирования:", error);
@@ -51,6 +72,18 @@ function buildAddress(data) {
     if (data.address.city) address += data.address.city + ", ";
     if (data.address.country) address += data.address.country;
     return address || "Адрес не найден";
+}
+
+// Функция для сохранения координат и адреса в sessionStorage
+function saveLocationToSession(lat, lon, address) {
+    const locationData = {
+        lat: lat,
+        lon: lon,
+        address: address
+    };
+
+    sessionStorage.setItem('location', JSON.stringify(locationData)); // Сохраняем данные в sessionStorage
+    console.log("Данные о местоположении сохранены в sessionStorage:", locationData);
 }
 
 // Обработчик кликов по карте для добавления метки
@@ -86,29 +119,31 @@ map.on('zoomend', function() {
     console.log("Масштаб изменен, текущие координаты метки:", lat, lon); // Логируем координаты после изменения масштаба
 });
 
-
-
-
 // Переменные для сохранения выбранного местоположения
 var selectedLat = null;
 var selectedLon = null;
 var selectizeDropdown = null; // Для хранения списка подсказок
+var debounceTimeout;
 
-// Функция для поиска адреса с использованием Nominatim
+// Функция для поиска адреса с использованием Nominatim с дебаунсом
 function getSuggestions(query, callback) {
-    var url = 'https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&addressdetails=1&limit=5';
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            var suggestions = data.map(function(item) {
-                return {
-                    value: item.display_name,
-                    lat: item.lat,
-                    lon: item.lon
-                };
-            });
-            callback(suggestions);
-        });
+    clearTimeout(debounceTimeout); // Очистить предыдущий таймаут
+    debounceTimeout = setTimeout(function() { // Добавить дебаунс
+        var url = 'https://nominatim.openstreetmap.org/search?q=' + query + '&format=json&addressdetails=1&limit=5';
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                var suggestions = data.map(function(item) {
+                    return {
+                        value: item.display_name,
+                        lat: item.lat,
+                        lon: item.lon
+                    };
+                });
+                callback(suggestions);
+            })
+            .catch(error => console.error("Ошибка поиска:", error));
+    }, 300); // Задержка 300ms
 }
 
 // Инициализация Selectize для автозаполнения
@@ -126,17 +161,29 @@ document.getElementById('address-search').addEventListener('input', function(eve
 
         selectizeDropdown = document.createElement('div');
         selectizeDropdown.classList.add('selectize-dropdown');
+        selectizeDropdown.style.border = 'solid 1px #0F3272';
+        selectizeDropdown.style.color = '#0F3272';
+        selectizeDropdown.style.fontSize = '1.5em';
+
         suggestions.forEach(function(suggestion) {
             var suggestionItem = document.createElement('div');
             suggestionItem.classList.add('selectize-item');
+            suggestionItem.style.margin = '10px 5px 10px 5px';
+            suggestionItem.style.lineHeight = '1.5';
+
             suggestionItem.textContent = suggestion.value;
             suggestionItem.addEventListener('click', function() {
+                // Удаляем старую метку перед добавлением новой
+                if (marker) {
+                    marker.remove();
+                }
+
                 // Устанавливаем выбранное местоположение
                 selectedLat = suggestion.lat;
                 selectedLon = suggestion.lon;
 
-                // Устанавливаем маркер на карте
-                L.marker([selectedLat, selectedLon]).addTo(map)
+                // Добавляем маркер на карту
+                marker = L.marker([selectedLat, selectedLon]).addTo(map)
                     .bindPopup(suggestion.value)
                     .openPopup();
 
@@ -146,6 +193,9 @@ document.getElementById('address-search').addEventListener('input', function(eve
                 // Обновляем скрытые поля формы
                 document.getElementById('lat').value = selectedLat;
                 document.getElementById('lon').value = selectedLon;
+
+                // Сохраняем в sessionStorage
+                saveLocationToSession(selectedLat, selectedLon, suggestion.value);
 
                 // Закрываем список подсказок
                 selectizeDropdown.remove();
@@ -157,4 +207,13 @@ document.getElementById('address-search').addEventListener('input', function(eve
         // Добавляем dropdown с подсказками
         document.querySelector('.search-container').appendChild(selectizeDropdown);
     });
+});
+
+// Обработчик клика по всему документу для скрытия подсказок при клике вне поля
+document.addEventListener('click', function(event) {
+    if (selectizeDropdown && !selectizeDropdown.contains(event.target) && event.target.id !== 'address-search') {
+        // Если клик был не по полю поиска и не по выпадающему списку, скрываем подсказки
+        selectizeDropdown.remove();
+        selectizeDropdown = null;
+    }
 });

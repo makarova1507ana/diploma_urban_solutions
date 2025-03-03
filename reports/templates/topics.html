@@ -14,7 +14,7 @@
     {% if topics %}
         <ul>
             {% for topic in topics %}
-                <a href="{% url 'reports:topic_detail' topic.pk %}"><li class="topic-item">
+                <a href="{% url 'reports:topic_detail' topic.pk %}"><li class="topic-item-li">
                     {{ topic.title }}
                 </li></a>
             {% endfor %}

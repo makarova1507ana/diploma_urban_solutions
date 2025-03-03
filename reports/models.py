@@ -49,9 +49,6 @@ class Report(models.Model):
     # Описание проблемы (необязательное, до 350 символов)
     description = models.TextField(blank=True, null=True, max_length=350)
 
-    # Категория в текстовом формате (если нужно)
-    category_text = models.CharField(max_length=100, blank=True, null=True, db_column='category')
-
     # Координаты места происшествия
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
@@ -59,14 +56,9 @@ class Report(models.Model):
     # Поле для текстового адреса
     address = models.TextField(blank=True, null=True)
 
-    # Поле для хранения URL изображения (если потребуется)
-    image_url = models.TextField(blank=True, null=True)
-
-    # Местоположение в текстовом формате
-    location = models.TextField(blank=True, null=True)
-
     # Поле статуса с возможными значениями
     STATUS_CHOICES = [
+        ('in_moderation', 'На модерации'),
         ('new', 'Новая'),
         ('in_progress', 'В обработке'),
         ('resolved', 'Решена'),
@@ -75,7 +67,7 @@ class Report(models.Model):
     status = models.CharField(
         max_length=50,
         choices=STATUS_CHOICES,
-        default='new',
+        default='in_moderation',
         blank=True,
         null=True
     )

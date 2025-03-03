@@ -6,6 +6,7 @@ from django.conf import settings
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 from time import sleep
+from django.db.models import Q
 
 from .models import ReportImage, Topic, CommentImage
 
@@ -14,10 +15,12 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import View
 from .models import Report
-from .forms import CommentForm
+from .forms import CommentForm, ReportForm
 from django.utils import timezone
 from datetime import timedelta
-
+from django.contrib import messages
+from geopy.exc import GeocoderTimedOut
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 # Представление для добавления комментария к отчету. Требуется, чтобы пользователь был авторизован.
 @method_decorator(login_required, name='dispatch')
@@ -88,6 +91,15 @@ class ReportDetailView(DetailView):
     template_name = 'report.html'
     context_object_name = 'report'
 
+    def get_context_data(self, **kwargs):
+        # Получаем контекст по умолчанию
+        context = super().get_context_data(**kwargs)
+
+        # Получаем все изображения, связанные с отчетом
+        report_images = ReportImage.objects.filter(report=self.object)
+        # Добавляем изображения в контекст
+        context['report_images'] = report_images
+        return context
 
 # Страница с картой (для отображения географической информации)
 class Map(TemplateView):
@@ -95,9 +107,20 @@ class Map(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['reports'] = Report.objects.all()  # Список всех отчетов с координатами
-        return context
 
+        queryset = Report.objects.all()
+
+        # Фильтрация отчётов со статусом "на модерации":
+        moderation_status = 'in_moderation'
+        if self.request.user.is_authenticated:
+            # Для авторизованных пользователей: отчеты на модерации показываются, только если они принадлежат текущему пользователю
+            queryset = queryset.exclude(Q(status=moderation_status) & ~Q(user=self.request.user))
+        else:
+            # Для неавторизованных пользователей: полностью исключаем отчеты на модерации
+            queryset = queryset.exclude(status=moderation_status)
+
+        context['reports'] = queryset  # Список всех отчетов
+        return context
 
 # Страница с перечнем всех отчетов с возможностью фильтрации
 class Reports(ListView):
@@ -105,13 +128,21 @@ class Reports(ListView):
     template_name = 'reports.html'
     context_object_name = 'reports'
     paginate_by = 10  # Количество отчетов на одной странице
-    ordering = ['-created_at']  # Сортировка по дате создания (по убыванию)
+    ordering = ['-updated_at']  # Сортировка по дате создания (по убыванию)
 
     def get_queryset(self):
         """
-        Фильтрация отчетов по статусу, категории и времени создания.
+        Фильтрация отчетов по статусу, категории, времени создания и поиску по названию и описанию.
         """
         queryset = Report.objects.all()
+        queryset = queryset.order_by('-updated_at')
+
+        # Поиск по части текста в названии и описании
+        search_query = self.request.GET.get('text')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | Q(description__icontains=search_query)
+            )
 
         # Фильтрация по статусу
         status = self.request.GET.get('status')
@@ -121,7 +152,7 @@ class Reports(ListView):
         # Фильтрация по категории
         category = self.request.GET.get('category')
         if category and category != "None":  # Проверка на None
-            queryset = queryset.filter(category__id=category)  # Фильтруем по ID
+            queryset = queryset.filter(category__id=category)
 
         # Фильтрация по временным диапазонам
         time_filter = self.request.GET.get('time_filter')
@@ -141,7 +172,16 @@ class Reports(ListView):
 
         # Фильтр по "Мои отчёты"
         if self.request.GET.get('is_mine'):
-            queryset = queryset.filter(user=self.request.user)  # Фильтруем по автору (пользователю)
+            queryset = queryset.filter(user=self.request.user)
+
+        # Фильтрация отчётов со статусом "на модерации":
+        moderation_status = 'in_moderation'
+        if self.request.user.is_authenticated:
+            # Для авторизованных пользователей: отчеты на модерации показываются, только если они принадлежат текущему пользователю
+            queryset = queryset.exclude(Q(status=moderation_status) & ~Q(user=self.request.user))
+        else:
+            # Для неавторизованных пользователей: полностью исключаем отчеты на модерации
+            queryset = queryset.exclude(status=moderation_status)
 
         return queryset
 
@@ -153,11 +193,12 @@ class Reports(ListView):
         context['status_filter'] = self.request.GET.get('status')
         context['category_filter'] = self.request.GET.get('category')
         context['time_filter'] = self.request.GET.get('time_filter')
-        context['is_mine'] = self.request.GET.get('is_mine')  # Для отображения галочки в форме
+        context['is_mine'] = self.request.GET.get('is_mine')
+        context['search_query'] = self.request.GET.get('text', '')
 
         # Получаем доступные статусы и категории из модели
         context['statuses'] = Report.STATUS_CHOICES
-        context['categories'] = Topic.objects.values_list('id', 'title')  # Получаем ID и названия категорий
+        context['categories'] = Topic.objects.values_list('id', 'title')
 
         return context
 
@@ -198,6 +239,7 @@ class Step2View(TemplateView):
         context = super().get_context_data(**kwargs)
         context['hide_report_button'] = True  # Скрываем кнопку
         context['topics'] = Topic.objects.all()  # Передаем список тем
+
         return context
 
     def post(self, request, *args, **kwargs):
@@ -218,16 +260,17 @@ class Step2View(TemplateView):
 
 # Страница для третьего этапа добавления отчета с обратным геокодированием
 class Step3View(TemplateView):
-    template_name = 'step3.html'
+    template_name = "step3.html"
 
     def get_context_data(self, **kwargs):
-        """
-        Геокодирование координат и передача данных о выбранной теме и адресе в контекст.
-        """
         context = super().get_context_data(**kwargs)
-        selected_topic_id = self.request.GET.get('selected_topic')
-        latitude = self.request.GET.get('latitude')
-        longitude = self.request.GET.get('longitude')
+        context["hide_report_button"] = True
+        request = self.request
+
+        # Получаем данные из сессии или запроса
+        latitude = request.session.get("latitude") or request.GET.get("latitude")
+        longitude = request.session.get("longitude") or request.GET.get("longitude")
+        selected_topic_id = request.session.get("selected_topic") or request.GET.get("selected_topic")
 
         # Проверка существования выбранной темы
         topic = None
@@ -237,43 +280,63 @@ class Step3View(TemplateView):
             except (ValueError, Topic.DoesNotExist):
                 topic = None
 
-        # Геокодирование с проверкой на ошибки
-        address = self.reverse_geocode(latitude, longitude) if latitude and longitude else "Адрес не найден"
+        # Обратное геокодирование, если адрес отсутствует
+        address = request.session.get("address")
+        if not address and latitude and longitude:
+            address = self.reverse_geocode(latitude, longitude)
 
         # Передаем данные в контекст
-        context.update({
-            'topic': topic,
+        form = ReportForm(initial={
+            'topic_id': selected_topic_id,
             'latitude': latitude,
             'longitude': longitude,
             'address': address,
         })
+        context.update({
+            "topic": topic,
+            "latitude": latitude,
+            "longitude": longitude,
+            "address": address,
+            "location": {"lat": latitude, "lon": longitude, "address": address},
+            "form": form,  # Передаем форму в контекст
+        })
         return context
 
     def reverse_geocode(self, latitude, longitude, retries=3):
-        """
-        Функция для обратного геокодирования с повторными попытками в случае таймаута.
-        """
         if not latitude or not longitude:
             return "Адрес не найден"
 
-        geolocator = Nominatim(user_agent="my_geocoder_app_12345")
+        geolocator = Nominatim(user_agent="geo_app")
         for attempt in range(retries):
             try:
                 location = geolocator.reverse(f"{latitude}, {longitude}", exactly_one=True)
                 if location and location.address:
                     return location.address
             except GeocoderTimedOut:
-                sleep(2)  # Ожидание перед повтором в случае таймаута
+                sleep(2)
             except Exception as e:
                 print(f"Ошибка геокодирования: {e}")
         return "Адрес не найден"
 
     def post(self, request, *args, **kwargs):
-        """
-        Сохранение данных отчета (выбранной темы, координат и описания) в базе данных.
-        """
-        selected_topic_id = request.POST.get('topic_id')  # Получаем ID темы
-        latitude = request.POST.get('latitude')
-        longitude = request.POST.get('longitude')
-        description = request.POST.get('description', '').strip()
-        images = request.FILES.getlist('images')
+        form = ReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Сохранение отчета
+            report = form.save(commit=False)
+            report.user = request.user
+            report.save()
+
+            # Сохранение изображения (если оно есть)
+            image = request.FILES.get("image")
+            if image:
+                ReportImage.objects.create(report=report, image=image)
+
+
+            messages.success(request, "Ваш отчет успешно создан!")
+            return redirect('reports:report_detail', pk=report.id)  # перенаправление на страницу отчета
+        else:
+            messages.error(request, "Ошибка в данных формы.")
+            return redirect(request.path)
+
+
+

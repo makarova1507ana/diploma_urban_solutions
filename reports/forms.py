@@ -3,7 +3,7 @@ import os
 from django.core.exceptions import ValidationError
 from django import forms
 from django.forms.widgets import ClearableFileInput
-from .models import Comment, CommentImage
+from .models import Comment, CommentImage, Topic, Report
 from PIL import Image
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -83,3 +83,59 @@ class CommentForm(forms.ModelForm):
         extension = os.path.splitext(image.name)[1]  # Получаем расширение файла
         unique_name = str(uuid.uuid4()) + extension  # Генерируем уникальное имя
         return unique_name
+
+
+class ReportForm(forms.ModelForm):
+    category = forms.ModelChoiceField(
+        queryset=Topic.objects.all(),
+        required=True,
+        label="Категория проблемы",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    title = forms.CharField(
+        min_length=5,
+        max_length=255,
+        required=True,
+        label="Название проблемы",
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+    latitude = forms.FloatField(
+        required=True,
+        widget=forms.HiddenInput()
+    )
+    longitude = forms.FloatField(
+        required=True,
+        widget=forms.HiddenInput()
+    )
+    address = forms.CharField(
+        required=True,
+        label="Адрес",
+        widget=forms.TextInput(attrs={"class": "form-control", "readonly": "readonly"})
+    )
+    description = forms.CharField(
+        required=False,
+        max_length=350,
+        label="Описание проблемы",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
+    )
+    image = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control"}),
+        label="Фотография"
+    )
+
+    class Meta:
+        model = Report
+        fields = ["category", "title", "latitude", "longitude", "address", "description", "image"]
+    # def clean_images(self):
+    #     images = self.files.getlist("images")
+    #
+    #     if len(images) > 5:
+    #         raise forms.ValidationError("Вы можете загрузить не более 5 изображений.")
+    #
+    #     max_size = 5 * 1024 * 1024  # 5MB
+    #     for image in images:
+    #         if image.size > max_size:
+    #             raise forms.ValidationError(f"Файл {image.name} превышает допустимый размер 5MB.")
+    #
+    #     return images

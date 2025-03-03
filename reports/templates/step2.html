@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Сообщить о проблеме{% endblock %}
 
@@ -7,11 +8,31 @@
 {% endblock %}
 
 {% block content %}
-<div>
-    <h2>Шаг 1: Где была обнаружена проблема?</h2>
-    <h2>Шаг 2: В чем проблема?</h2>
-    <h2>Шаг 3: Опишите проблему</h2>
+<style>
+h1{
+    margin: 0;
+}
+</style>
+
+{% if not user.is_authenticated %}
+<h2><a href="{% url 'users:login' %}">Для того, чтобы продолжить авторизуйтесь </a></h2>
+
+{% else %}
+<div class="steps">
+    <a href=" {% url 'reports:step1' %}"><div class="step" >
+        <span class="circle">1</span>
+        <h2>Укажите адрес</h2>
+    </div></a>
+     <a href=" {% url 'reports:step2' %}"><div class="step" >
+        <span class="circle" style="background:#fff;">2</span>
+        <h2>Укажите категорию проблемы</h2>
+    </div></a>
+     <a href=" {% url 'reports:step3' %}"><div class="step">
+        <span class="circle">3</span>
+        <h2>Опишите проблему</h2>
+    </div></a>
 </div>
+
 
 <div class="step2-container">
     <form id="problemForm" method="GET" action="{% url 'reports:step3' %}">
@@ -24,10 +45,10 @@
                         <li class="topic-item-container">
                             <button type="button" class="topic-item"
                                     data-topic-id="{{ topic.pk }}"
-                                    data-lat="{{ request.session.lat }}"
-                                    data-lon="{{ request.session.lon }}"
-                                    data-title="{{ topic.title }}"
-                                    data-description="{{ topic.description }}">
+                                    data-lat=""
+                                    data-lon=""
+                                    data-address=""
+                                    data-title="{{ topic.title }}">
                                 {{ topic.title }}
                             </button>
                             <button type="button" class="toggle-description">↓</button>
@@ -47,43 +68,10 @@
     </form>
 </div>
 
-<script>
-document.querySelectorAll('.topic-item').forEach(function(button) {
-    button.addEventListener('click', function() {
-        var topicId = button.getAttribute('data-topic-id');
-        console.log("Выбрана тема:", topicId); // для отладки
 
-        // Обновляем поля формы
-        var lat = button.getAttribute('data-lat');
-        var lon = button.getAttribute('data-lon');
-        document.getElementById('latitude').value = lat;
-        document.getElementById('longitude').value = lon;
+{% endif %}
+{% endblock %}
 
-        // Добавляем скрытое поле для выбранной темы
-        var topicInput = document.createElement('input');
-        topicInput.type = 'hidden';
-        topicInput.name = 'selected_topic';
-        topicInput.value = topicId;
-        document.getElementById('problemForm').appendChild(topicInput);
-
-        // Устанавливаем значения в сессию
-        sessionStorage.setItem('latitude', lat);
-        sessionStorage.setItem('longitude', lon);
-        sessionStorage.setItem('selected_topic', topicId);
-
-        // Отправляем форму
-        document.getElementById('problemForm').submit();
-    });
-});
-
-// Отображение/скрытие описания темы
-document.querySelectorAll('.toggle-description').forEach(function(button) {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        var description = button.closest('.topic-item-container').querySelector('.topic-description');
-        description.style.display = description.style.display === 'none' ? 'block' : 'none';
-    });
-});
-</script>
-
+{% block scripts %}
+<script src="{% static 'js/step2.js' %}"></script>
 {% endblock %}

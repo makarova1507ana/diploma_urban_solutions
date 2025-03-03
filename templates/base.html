@@ -23,12 +23,12 @@
         </nav>
 
         <!-- Поиск -->
-        <div class="search_block">
-          <form method="get">
-            <input type="search" name="text" class="search" placeholder="Поиск">
-            <input type="submit" name="submit" class="submit" value="🔍︎">
+      <div class="search_block">
+          <form method="get" action="{% url 'reports:reports' %}">
+              <input type="search" name="text" class="search" placeholder="Поиск" value="{{ search_query|default_if_none:'' }}">
+              <input type="submit" class="submit" value="🔍︎">
           </form>
-        </div>
+      </div>
 
         <div class="sign-in">
             {% if user.is_authenticated %}
@@ -91,14 +91,14 @@
             </div>
             <div class="footer-sections">
                 <div>
-                    <h3>Самые лучшие решения</h3>
+                  <a href="{% url 'index' %}">  <h3>Самые лучшие решения</h3></a>
                 </div>
 
                 <div>
-                    <h3>Как это работает?</h3>
+                    <a href="{% url 'about' %}"><h3>Как это работает?</h3></a>
                 </div>
                 <div class="footer-support">
-                    <h3>Написать в техподдержку</h3>
+                    <a href="mailto:support@mail.com"><h3>Написать в техподдержку</h3></a>
                     <a href="mailto:support@mail.com">support@mail.com</a>
                 </div>
             </div>

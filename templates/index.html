@@ -40,7 +40,7 @@
 
                     {% endwith %}
                 </div>
-                <h2>Самая популярная тема: {{ most_common_topic }}</h2>  <!-- Отображаем название темы -->
+                <h2>Самая частая проблема: {{ most_common_topic }}</h2>  <!-- Отображаем название темы -->
                 <h3 class="report-title">{{ random_report.title }}</h3>
             </div>
         </a>
@@ -54,23 +54,25 @@
 
 
         {% for report in reports %}
+        <a href="{% url 'reports:report_detail' report.id %}">
         <div class="result-card">
             <div class="image-container">
                 {% with report.images.first as image %}
-                <a href="{% url 'reports:report_detail' report.id %}">
+
                     {% if image %}
                     <img src="{{ image.image.url }}" alt="{{ report.title }}">
                     {% else %}
                     <img src="{% static 'images/1.jpg' %}" alt="Default Image">
                     {% endif %}
                     <div class="overlay">Посмотреть</div>
-                </a>
+
                 {% endwith %}
             </div>
             <h3 class="report-title">{{ report.title }}</h3>  <!-- Добавляем заголовок -->
             <p class="report-status">Статус: {{ report.get_status_display }}</p>  <!-- Отображение статуса -->
 
         </div>
+        </a>
         {% endfor %}
 
 

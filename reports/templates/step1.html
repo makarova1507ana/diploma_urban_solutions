@@ -4,8 +4,8 @@
 {% block title %}Сообщить о проблеме{% endblock %}
 
 {% block additionalHead %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css"/>
 
 {% endblock %}
 
@@ -14,42 +14,65 @@
 {% endblock %}
 
 {% block content %}
+
 <style>
-/* Скрыть только атрибуцию Leaflet */
-.leaflet-control-attribution a:nth-child(1) {
-    display: none !important;
-}
+    h1{
+        margin: 0;
+    }
 </style>
-<div>
-    <h2>Шаг 1: Где была обнаружена проблема?
-</h2>
-    <h2>Шаг 2: В чем проблема?
-</h2>
-    <h2>Шаг 3: Опишите проблему
-</h2>
+
+{% if not user.is_authenticated %}
+<h2><a href="{% url 'users:login' %}">Для того, чтобы продолжить авторизуйтесь </a></h2>
+
+{% else %}
+
+
+<div class="steps">
+    <a href=" {% url 'reports:step1' %}">
+        <div class="step">
+            <span class="circle" style="background:#fff;">1</span>
+            <h2>Укажите адрес</h2>
+        </div>
+    </a>
+    <a href=" {% url 'reports:step2' %}">
+        <div class="step">
+            <span class="circle">2</span>
+            <h2>Укажите категорию проблемы</h2>
+        </div>
+    </a>
+    <a href=" {% url 'reports:step3' %}">
+        <div class="step">
+            <span class="circle">3</span>
+            <h2>Опишите проблему</h2>
+        </div>
+    </a>
 </div>
-    <!-- Элемент для отображения карты -->
-    <div id="map" style="width: 1000px; height: 500px;"></div>
 
-    <!-- Строка поиска по адресу -->
-    <div class="search-container">
-        <input style="width: 1000px;" type="text" id="address-search" placeholder="Введите адрес для поиска">
-    </div>
 
-    <!-- Форма подтверждения выбора -->
-    <form method="POST">
-        {% csrf_token %}
-        <input type="hidden" name="lat" id="lat">
-        <input type="hidden" name="lon" id="lon">
-        <button type="submit" id="confirm-button">Подтвердить</button>
-    </form>
+<!-- Элемент для отображения карты -->
+<div id="map" style="width: 100%; height: 500px; margin: 10px 00px 10px 0px;"></div>
+
+<!-- Строка поиска по адресу -->
+<div class="search-container" style="width: 100%;">
+    <input style="width: 100%; height: 40px; font-size:1.5em; border: solid 1px #0F3272; border-radius: 5px; padding: 10px 0px 10px 10px;   box-sizing: border-box;
+" type="text" id="address-search" placeholder="Введите адрес для поиска">
+</div>
+
+<!-- Форма подтверждения выбора -->
+<form method="POST" class="step1-form">
+    {% csrf_token %}
+    <input type="hidden" name="lat" id="lat">
+    <input type="hidden" name="lon" id="lon">
+    <button type="submit" id="confirm-button">Подтвердить</button>
+</form>
+{% endif %}
 {% endblock %}
 
 
 {% block scripts %}
-    <!-- Подключаем скрипты Leaflet и автозаполнение для поиска -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"></script>
-    <script src="{% static 'js/map.js' %}"></script>
+<!-- Подключаем скрипты Leaflet и автозаполнение для поиска -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"></script>
+<script src="{% static 'js/step1.js' %}"></script>
 {% endblock %}
 

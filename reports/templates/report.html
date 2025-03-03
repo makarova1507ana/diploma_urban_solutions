@@ -10,18 +10,11 @@
 {% block pageTitle %}Отчет о проблеме{% endblock %}
 
 {% block content %}
+{% if not report.status == 'in_moderation' or user.is_authenticated and report.user == user %}
+
     <div class="report-details">
         <h2>{{ report.title }}</h2>
 
-        <!-- Показываем изображения, привязанные к отчету -->
-        <div class="image-container">
-            {% for image in report.get_images %}
-                <img src="{{ image.image.url }}" alt="Изображение проблемы" class="report-image">
-            {% endfor %}
-            {% if not report.get_images %}
-                <img src="{% static 'images/1.jpg' %}" alt="Изображение не доступно" class="report-image">
-            {% endif %}
-        </div>
 
         <!-- Описание проблемы -->
         {% if report.description %}
@@ -46,6 +39,21 @@
         <!-- Карта с маркером -->
         <div id="map" style="height: 400px; display: none;"></div>
 
+        <!-- Показываем изображения, привязанные к отчету -->
+        {% if report_image %}
+        {% for report_image in report_images %}
+        <div class="image-container">
+            {% if report_image.image.url %}
+            <img src="{{ report_image.image.url }}" alt="Изображение проблемы" class="report-image">
+
+            {% endif %}
+            {% endfor %}
+
+        </div>
+        <div class="image-container">
+        {% else %}
+            <img src="{% static 'images/1.jpg' %}" alt="Изображение не доступно" class="report-image"> </div>
+        {% endif %}
         <!-- Комментарии -->
         <div class="comments-section">
             <h3>Комментарии</h3>
@@ -109,12 +117,19 @@
             <p>Чтобы оставить комментарий, пожалуйста, войдите в систему.</p>
         {% endif %}
     </div>
+{% else %}
+<h2>Эта заявка находится на модерации и доступ к ней закрыт</h2>
+<a href="{% url 'reports:reports' %}">Вернуться к списку отчетов?</a>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+    sessionStorage.clear();
+
     document.getElementById('showMapButton').addEventListener('click', function() {
         var mapElement = document.getElementById('map');
         var button = document.getElementById('showMapButton');
@@ -140,5 +155,7 @@
             button.textContent = 'Показать на карте';
         }
     });
+
 </script>
+
 {% endblock %}

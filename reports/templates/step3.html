@@ -7,52 +7,160 @@
 {% endblock %}
 
 {% block content %}
-<div>
-    <h2>Шаг 1: Где была обнаружена проблема?</h2>
-    <h2>Шаг 2: В чем проблема?</h2>
-    <h2>Шаг 3: Опишите проблему</h2>
+<style>
+h1 {
+    margin: 0;
+}
+
+#drag-area {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #777;
+    cursor: pointer;
+}
+
+#drag-area.dragging {
+    background-color: #f0f0f0;
+    border-color: #888;
+}
+
+#drag-area p {
+    margin: 0;
+}
+
+#file-input {
+    display: none;
+}
+</style>
+
+{% if not user.is_authenticated %}
+<h2><a href="{% url 'users:login' %}">Для того, чтобы продолжить авторизуйтесь </a></h2>
+
+{% else %}
+<div class="steps">
+    <a href="{% url 'reports:step1' %}">
+        <div class="step">
+            <span class="circle">1</span>
+            <h2>Укажите адрес</h2>
+        </div>
+    </a>
+    <a href="{% url 'reports:step2' %}">
+        <div class="step">
+            <span class="circle">2</span>
+            <h2>Укажите категорию проблемы</h2>
+        </div>
+    </a>
+    <a href="{% url 'reports:step3' %}">
+        <div class="step">
+            <span class="circle" style="background:#fff;">3</span>
+            <h2>Опишите проблему</h2>
+        </div>
+    </a>
 </div>
+
 <div class="step3-container">
     <h2>Подтвердите информацию</h2>
 
-    <form method="POST" action="{% url 'reports:step3' %}" enctype="multipart/form-data">
+    <form method="POST" class="step3" action="{% url 'reports:step3' %}" enctype="multipart/form-data" id="problemForm">
         {% csrf_token %}
 
-        <!-- Отображение данных перед отправкой -->
-        <p><strong>Тема:</strong> {{ topic.title }}</p>
-        <input type="hidden" name="topic_id" value="{{ topic.id }}">
+        <!-- Вывод ошибок формы -->
+        {% if form.errors %}
+            <div class="form-errors">
+                <ul>
+                    {% for field in form %}
+                        {% if field.errors %}
+                            <li>{{ field.name }}: {{ field.errors }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
 
-        <p><strong>Широта:</strong> {{ latitude }}</p>
-        <input type="hidden" name="latitude" value="{{ latitude }}">
+        {{ form.as_p }}
 
-        <p><strong>Долгота:</strong> {{ longitude }}</p>
-        <input type="hidden" name="longitude" value="{{ longitude }}">
-
-        <p><strong>Адрес:</strong> {{ address }}</p>
-        <input type="hidden" name="address" value="{{ address }}">
-
-        <!-- Описание проблемы -->
-        <label for="description">Описание (необязательно, не более 350 символов):</label>
-        <textarea id="description" name="description" maxlength="350"></textarea>
-
-        <!-- Поле для загрузки изображений -->
-        <p>
-            <label for="images">Выберите или перетащите фотографию / группу фотографий:</label>
-            <input id="images" type="file" name="images" accept=".jpg, .jpeg, .png, .heic, .heif" multiple>
-        </p>
-        <p>Фотографий должно быть не больше 5 штук, форматом JPG, JPEG, PNG, HEIC, HEIF, размером не более 5 МБ каждая.</p>
+        <div id="drag-area" class="drop-area">
+            <p>Перетащите файлы сюда или нажмите для выбора файлов</p>
+            <input type="file" id="file-input" name="images" multiple>
+        </div>
 
         <button type="submit">Отправить отчет</button>
     </form>
 </div>
 
 <script>
-    document.getElementById("images").addEventListener("change", function(event) {
-        if (this.files.length > 5) {
+    document.addEventListener("DOMContentLoaded", function () {
+        var storedTopic = JSON.parse(sessionStorage.getItem('selected_topic'));
+        var storedLocation = JSON.parse(sessionStorage.getItem('location'));
+
+        if (storedTopic) {
+            document.getElementById('id_category').value = storedTopic.id;
+        }
+
+        if (storedLocation) {
+            document.getElementById('id_latitude').value = storedLocation.lat;
+            document.getElementById('id_longitude').value = storedLocation.lon;
+            document.getElementById('id_address').value = storedLocation.address;
+        }
+    });
+
+    const dragArea = document.getElementById("drag-area");
+    const fileInput = document.getElementById("file-input");
+
+    dragArea.addEventListener("dragover", function (event) {
+        event.preventDefault();
+        dragArea.classList.add("dragging");
+    });
+
+    dragArea.addEventListener("dragleave", function () {
+        dragArea.classList.remove("dragging");
+    });
+
+    dragArea.addEventListener("drop", function (event) {
+        event.preventDefault();
+        dragArea.classList.remove("dragging");
+        const droppedFiles = event.dataTransfer.files;
+
+        if (droppedFiles.length > 5) {
             alert("Вы можете загрузить не более 5 изображений.");
-            this.value = "";
+            return;
+        }
+
+        const dt = new DataTransfer();
+        for (let i = 0; i < droppedFiles.length; i++) {
+            if (droppedFiles[i].size > 5 * 1024 * 1024) {
+                alert(`Файл ${droppedFiles[i].name} превышает допустимый размер 5MB.`);
+                return;
+            }
+            dt.items.add(droppedFiles[i]);
+        }
+        fileInput.files = dt.files;
+        fileInput.dispatchEvent(new Event('change'));
+    });
+
+    dragArea.addEventListener("click", function () {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function () {
+        const files = fileInput.files;
+        if (files.length > 5) {
+            alert("Вы можете загрузить не более 5 изображений.");
+            fileInput.value = "";
+            return;
+        }
+
+        for (let file of files) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`Файл ${file.name} превышает допустимый размер 5MB.`);
+                fileInput.value = "";
+                break;
+            }
         }
     });
 </script>
+{% endif %}
 
 {% endblock %}
