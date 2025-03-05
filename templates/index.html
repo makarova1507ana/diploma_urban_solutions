@@ -25,7 +25,7 @@
 
         <!-- Самая популярная категория и случайная проблема по ней -->
         {% if most_common_topic %}
-        <a href="{% url 'reports:report_detail' random_report.id %}">
+        <a href="{% url 'reports:report_detail' random_report.id %}"  style="text-decoration: none;">
             <div class="most-common-category">
 
                 <div class="image-container">
@@ -54,7 +54,7 @@
 
 
         {% for report in reports %}
-        <a href="{% url 'reports:report_detail' report.id %}">
+        <a href="{% url 'reports:report_detail' report.id %}" style="text-decoration: none;">
         <div class="result-card">
             <div class="image-container">
                 {% with report.images.first as image %}

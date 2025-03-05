@@ -105,7 +105,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+
+LANGUAGE_CODE = 'en'  # Язык по умолчанию
+
+LANGUAGES = [
+    ('en', 'English'),
+    ('ru', 'Russian'),
+]
 
 TIME_ZONE = 'UTC'
 
@@ -145,17 +151,20 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_REDIRECT_URL = '/users/account'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/'
-#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 
 AUTH_USER_MODEL = 'users.User'
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_HOST = "smtp.gmail.com" #"smtp.yandex.ru"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 465
-EMAIL_HOST_USER = "testerikotesteriko@gmail.com" #"djangocourse@yandex.ru"
-EMAIL_HOST_PASSWORD = "yuye baap ulky gsia"   #пароль приложений #"bnufhkwcripaunvu"
-EMAIL_USE_SSL = True
+EMAIL_USE_SSL = True  # SSL включаем
+
+EMAIL_HOST_USER = "testeriko.tester@gmail.com"
+EMAIL_HOST_PASSWORD = "ofnr svrn yheu ydwr"
+
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
+EMAIL_TIMEOUT = 10  # Устанавливаем таймаут на 10 секунд

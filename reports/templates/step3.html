@@ -1,6 +1,15 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Сообщить о проблеме{% endblock %}
+
+{% block additionalHead %}
+
+<!-- Подключаем стили для FilePond -->
+    <link href="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.css" rel="stylesheet">
+    <!-- Подключаем плагин для предпросмотра изображений -->
+    <link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.3.1/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
+{% endblock %}
 
 {% block pageTitle %}
     Сообщить о проблеме
@@ -11,27 +20,15 @@
 h1 {
     margin: 0;
 }
+/* Стили для отображения предпросмотра */
 
-#drag-area {
-    border: 2px dashed #ccc;
-    padding: 20px;
-    text-align: center;
-    font-size: 16px;
-    color: #777;
-    cursor: pointer;
+.filepond--root {
+    width: 100%;
 }
 
-#drag-area.dragging {
-    background-color: #f0f0f0;
-    border-color: #888;
-}
-
-#drag-area p {
-    margin: 0;
-}
-
-#file-input {
-    display: none;
+.filepond--item {
+    width: 150px;
+    flex-shrink: 0;
 }
 </style>
 
@@ -61,7 +58,6 @@ h1 {
 </div>
 
 <div class="step3-container">
-    <h2>Подтвердите информацию</h2>
 
     <form method="POST" class="step3" action="{% url 'reports:step3' %}" enctype="multipart/form-data" id="problemForm">
         {% csrf_token %}
@@ -80,87 +76,32 @@ h1 {
         {% endif %}
 
         {{ form.as_p }}
+        <p class="info">ℹ️ Максимум 350 символов</p>
 
-        <div id="drag-area" class="drop-area">
-            <p>Перетащите файлы сюда или нажмите для выбора файлов</p>
-            <input type="file" id="file-input" name="images" multiple>
-        </div>
+        <input type="file" id="filepond" class="filepond" name="file" multiple>
+        <p class="info">ℹ️ Выберите или перетащите фотографию / группу фотографий. Фотографий должно быть не больше 5 штук, форматом jpg, jpeg png, heic, heif, размером не более 5 мб каждая</p>
 
         <button type="submit">Отправить отчет</button>
     </form>
+
+
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var storedTopic = JSON.parse(sessionStorage.getItem('selected_topic'));
-        var storedLocation = JSON.parse(sessionStorage.getItem('location'));
 
-        if (storedTopic) {
-            document.getElementById('id_category').value = storedTopic.id;
-        }
 
-        if (storedLocation) {
-            document.getElementById('id_latitude').value = storedLocation.lat;
-            document.getElementById('id_longitude').value = storedLocation.lon;
-            document.getElementById('id_address').value = storedLocation.address;
-        }
-    });
-
-    const dragArea = document.getElementById("drag-area");
-    const fileInput = document.getElementById("file-input");
-
-    dragArea.addEventListener("dragover", function (event) {
-        event.preventDefault();
-        dragArea.classList.add("dragging");
-    });
-
-    dragArea.addEventListener("dragleave", function () {
-        dragArea.classList.remove("dragging");
-    });
-
-    dragArea.addEventListener("drop", function (event) {
-        event.preventDefault();
-        dragArea.classList.remove("dragging");
-        const droppedFiles = event.dataTransfer.files;
-
-        if (droppedFiles.length > 5) {
-            alert("Вы можете загрузить не более 5 изображений.");
-            return;
-        }
-
-        const dt = new DataTransfer();
-        for (let i = 0; i < droppedFiles.length; i++) {
-            if (droppedFiles[i].size > 5 * 1024 * 1024) {
-                alert(`Файл ${droppedFiles[i].name} превышает допустимый размер 5MB.`);
-                return;
-            }
-            dt.items.add(droppedFiles[i]);
-        }
-        fileInput.files = dt.files;
-        fileInput.dispatchEvent(new Event('change'));
-    });
-
-    dragArea.addEventListener("click", function () {
-        fileInput.click();
-    });
-
-    fileInput.addEventListener("change", function () {
-        const files = fileInput.files;
-        if (files.length > 5) {
-            alert("Вы можете загрузить не более 5 изображений.");
-            fileInput.value = "";
-            return;
-        }
-
-        for (let file of files) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert(`Файл ${file.name} превышает допустимый размер 5MB.`);
-                fileInput.value = "";
-                break;
-            }
-        }
-    });
-</script>
 {% endif %}
+
+{% endblock %}
+
+
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.5/dist/compressor.min.js"></script>
+
+    <!-- Подключаем JavaScript для FilePond и плагинов -->
+    <script src="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.3.1/dist/filepond-plugin-image-preview.min.js"></script>
+
+    <script src="{% static 'js/step3.js' %}"></script>
 
 {% endblock %}

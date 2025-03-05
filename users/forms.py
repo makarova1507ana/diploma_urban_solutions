@@ -84,8 +84,7 @@ class RegisterUserForm(UserCreationForm):
 class ProfileUserForm(forms.ModelForm):
     email = forms.CharField(label='E-mail', widget=forms.TextInput(attrs={'class': 'form-input'}))
     full_name = forms.CharField(label='ФИО', widget=forms.TextInput(attrs={'class': 'form-input'}))
-    role = forms.CharField(label='Роль', widget=forms.TextInput(attrs={'class': 'form-input'}), required=False)
-    address = forms.CharField(label='Адрес', widget=forms.Textarea(attrs={'class': 'form-input'}), required=False)
+    address = forms.CharField(label='Адрес', widget=forms.TextInput(attrs={'class': 'form-input'}), required=False)
     phone_number = forms.CharField(label='Телефон', widget=forms.TextInput(attrs={'class': 'form-input'}),
                                    required=False)
     district = forms.CharField(label='Район', widget=forms.TextInput(attrs={'class': 'form-input'}), required=False)
@@ -97,7 +96,7 @@ class ProfileUserForm(forms.ModelForm):
 
     class Meta:
         model = get_user_model()
-        fields = ['email', 'full_name', 'role', 'address', 'phone_number', 'district',
+        fields = ['email', 'full_name', 'address', 'phone_number', 'district',
                   'preferred_contact']
         widgets = {
             'full_name': forms.TextInput(attrs={'class': 'form-input'}),

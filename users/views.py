@@ -1,35 +1,4 @@
-# from django.contrib.auth.decorators import login_required
-# from django.contrib.auth.forms import AuthenticationForm
-# from django.contrib.auth.views import LoginView, LogoutView
-# from django.http import HttpResponse
-# from django.shortcuts import render
-# from django.urls import reverse_lazy
-# from django.views.generic import CreateView
-#
-# from users.forms import LoginUserForm, RegisterUserForm
-#
-#
-# class LoginUser(LoginView):
-#     form_class = LoginUserForm #LoginUserForm - немного модифицировали  / AuthenticationForm - это стандатрнтная форма
-#     template_name = 'users/sign_in.html'
-#
-#     def get_success_url(self):
-#         return '/' #reverse_lazy('home')
-#
-# # class LogoutUser(LogoutView):
-# #     def get_success_url(self):
-# #         return '../../' # костыльный выход на главную страницу
-# class RegisterUser(CreateView):
-#     form_class = RegisterUserForm
-#     template_name = 'users/registration.html'
-#
-#     def get_success_url(self):
-#         return '/users/login/' #reverse_lazy('home')
-#
-# @login_required(login_url='/users/login/') #login_url- неавтор. пол. отравляем на авторизацию
-# def account(request):
-#     # только авторизованным пользователям доступна страница
-#     return render(request, 'users/account.html')
+
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
@@ -39,7 +8,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView
+from django.db.models import Count
 
+from reports.models import Report
 from .forms import LoginUserForm, RegisterUserForm, UserPasswordChangeForm, ProfileUserForm
 
 # страница для входа пользователя
@@ -70,6 +41,25 @@ class ProfileUser(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user  # Получение объекта пользователя для редактирования
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Получение всех отчетов пользователя
+        user_reports = Report.objects.filter(user=self.request.user)
+
+        # Подсчет общего количества отчетов и количества отчетов в разных статусах
+        report_counts = user_reports.values('status').annotate(count=Count('id')).order_by('status')
+
+        total_reports = user_reports.count()
+        status_counts = {status['status']: status['count'] for status in report_counts}
+
+        # Добавляем данные в контекст
+        context['user_reports'] = user_reports
+        context['total_reports'] = total_reports
+        context['status_counts'] = status_counts  # Словарь вида: {статус: количество}
+
+        return context
 
 # страница для изменения пароля пользователя
 class UserPasswordChange(PasswordChangeView):

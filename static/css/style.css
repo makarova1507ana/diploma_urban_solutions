@@ -38,6 +38,8 @@ header {
     font-size: 2em;
     font-weight: bold;
     color: #0F3272; /* Убедимся, что цвет логотипа соответствует общей палитре */
+        margin-right: 5px;
+
 }
 
 header nav {
@@ -421,6 +423,153 @@ max-height: 200px;
 max-height: 170px;
 }
 
+
+.pop-up-content{
+    line-height: 1.6;
+}
+
+#infoPanel{
+padding: 10px;
+background-color: #f9f9f9;
+border-top: 2px solid #ddd;
+font-size: 1.3em;
+line-height: 1.6;
+}
+
+#infoPanel button {
+margin-top: 5px;
+background-color: #0F3272;
+color: #fff;
+font-size: 1.2em;
+padding: 7px;
+border: solid 1px #0F3272;
+border-radius: 5px;
+}
+
+form.mb-4 .row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly; /* Равномерное распределение элементов */
+  align-items: flex-end;         /* Выравнивание по нижнему краю (если нужно) */
+  gap: 1rem;                    /* Дополнительный отступ между элементами */
+}
+form.mb-4{
+font-size: 1.2em;
+}
+
+form.mb-4 select, form.mb-4 datalist, form.mb-4 input{
+font-size: 1.1em;
+color: #0F3272;
+}
+.choices{
+display:inline-block;
+}
+
+
+/* Контейнер галереи */
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* Элемент галереи */
+.gallery-item {
+    width: 200px; /* Фиксированный размер превью */
+    height: 200px;
+    overflow: hidden;
+    border-radius: 5px;
+    border: 2px solid #0F3272;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+.gallery-item:hover {
+    transform: scale(1.1);
+}
+
+/* Картинки в галерее */
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Модальное окно */
+.modal {
+    display: none; /* По умолчанию скрыто */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Закрывающая кнопка */
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 30px;
+    color: white;
+    cursor: pointer;
+}
+
+/* Увеличенное изображение */
+.modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 5px;
+}
+
+
+
+height:28px;
+}
+form.mb-4 input[type="checkbox"]{
+width: 1.2em;
+margin: 0;
+margin-top: 7px;
+height: 1em;
+}
+
+form.mb-4  button{
+margin-top: 5px;
+background-color: #0F3272;
+color: #fff;
+
+padding: 7px;
+border: solid 1px #0F3272;
+border-radius: 5px;}
+
+#showMapButton, .btn-comment{
+margin-top: 5px;
+margin-bottom: 10px;
+background-color: #0F3272;
+color: #fff;
+
+padding: 7px;
+border: solid 1px #0F3272;
+border-radius: 5px;}
+
+
+.btn-change-password, .btn-save-profile, .reset-password-email, .btn{
+margin-top: 5px;
+margin-bottom: 10px;
+background-color: #0F3272;
+color: #fff;
+
+padding: 7px;
+border: solid 1px #0F3272;
+border-radius: 5px;
+}
+
 .image-container img {
     width: 100%;
     height: 100%;
@@ -467,18 +616,38 @@ max-height: 170px;
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Отступ между элементами формы */
+    gap: 5px; /* Отступ между элементами формы */
     font-weight: bold;
 }
 
-.step3 input, .step3 textarea, .step3 select{
+.step3 .info{
+margin-top: -10px;
+}
+
+.step3 input, .step3 select{
 float: right;
 font-size: 1.1em;
 height: 35px;
 width: 50%;
 margin-right: 30%;
 padding: 5px;
+color: #0F3272;
 }
+ .step3 textarea{
+ width: 100%;
+display: block;
+font-size: 1.2em;
+color: #0F3272;
+ }
+
+  .step3 label[for="id_address"]{
+  display: none;
+  }
+ .step3 #id_description{
+  margin-top: 5px;
+  }
+  .step3 p:nth-child(4){
+  display:none;}
 
 .step3 input[name='address']{
     pointer-events: none;

@@ -1,3 +1,5 @@
+import os
+
 from django.views.generic import TemplateView, DetailView, ListView
 from django.shortcuts import redirect, render
 from django.core.files.storage import default_storage
@@ -7,6 +9,7 @@ from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 from time import sleep
 from django.db.models import Q
+from django.http import JsonResponse
 
 from .models import ReportImage, Topic, CommentImage
 
@@ -77,11 +80,17 @@ class TopicDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         """
-        Добавление связанных отчетов к теме. Выбираются случайные 5 отчетов.
+        Добавление связанных отчетов к теме. Выбираются случайные 3 отчетов.
         """
         context = super().get_context_data(**kwargs)
         topic = context['topic']
-        related_reports = Report.objects.filter(category=topic).order_by('?')[:3]  # Получаем 3 случайных отчета
+        # Фильтрация отчётов со статусом "на модерации":
+        moderation_status = 'in_moderation'
+        queryset = Report.objects.filter(category=topic).order_by('?')
+
+
+        queryset = queryset.exclude(status=moderation_status)
+        related_reports = queryset[:3]  # Получаем 3 случайных отчета
         context['related_reports'] = related_reports  # Добавляем связанные отчеты в контекст
         return context
 
@@ -101,41 +110,12 @@ class ReportDetailView(DetailView):
         context['report_images'] = report_images
         return context
 
-# Страница с картой (для отображения географической информации)
-class Map(TemplateView):
-    template_name = 'map.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
+class ReportFilterMixin:
+    """
+    Миксин для фильтрации отчетов и формирования общих элементов контекста.
+    """
+    def get_filtered_reports(self):
         queryset = Report.objects.all()
-
-        # Фильтрация отчётов со статусом "на модерации":
-        moderation_status = 'in_moderation'
-        if self.request.user.is_authenticated:
-            # Для авторизованных пользователей: отчеты на модерации показываются, только если они принадлежат текущему пользователю
-            queryset = queryset.exclude(Q(status=moderation_status) & ~Q(user=self.request.user))
-        else:
-            # Для неавторизованных пользователей: полностью исключаем отчеты на модерации
-            queryset = queryset.exclude(status=moderation_status)
-
-        context['reports'] = queryset  # Список всех отчетов
-        return context
-
-# Страница с перечнем всех отчетов с возможностью фильтрации
-class Reports(ListView):
-    model = Report
-    template_name = 'reports.html'
-    context_object_name = 'reports'
-    paginate_by = 10  # Количество отчетов на одной странице
-    ordering = ['-updated_at']  # Сортировка по дате создания (по убыванию)
-
-    def get_queryset(self):
-        """
-        Фильтрация отчетов по статусу, категории, времени создания и поиску по названию и описанию.
-        """
-        queryset = Report.objects.all()
-        queryset = queryset.order_by('-updated_at')
 
         # Поиск по части текста в названии и описании
         search_query = self.request.GET.get('text')
@@ -147,12 +127,21 @@ class Reports(ListView):
         # Фильтрация по статусу
         status = self.request.GET.get('status')
         if status:
-            queryset = queryset.filter(status=status)
+            status_mapping = {
+                'На модерации': 'in_moderation',
+                'Новая': 'new',
+                'В обработке': 'in_progress',
+                'Решена': 'resolved',
+                'Отклонена': 'rejected'
+            }
+            # Получаем значение для фильтрации из словаря, если его нет — оставляем оригинальное значение
+            status_en = status_mapping.get(status, status)
+            queryset = queryset.filter(status=status_en)
 
         # Фильтрация по категории
         category = self.request.GET.get('category')
-        if category and category != "None":  # Проверка на None
-            queryset = queryset.filter(category__id=category)
+        if category and category != "None":
+            queryset = queryset.filter(category__title=category)
 
         # Фильтрация по временным диапазонам
         time_filter = self.request.GET.get('time_filter')
@@ -174,32 +163,53 @@ class Reports(ListView):
         if self.request.GET.get('is_mine'):
             queryset = queryset.filter(user=self.request.user)
 
-        # Фильтрация отчётов со статусом "на модерации":
+        # Фильтрация отчетов со статусом "на модерации":
         moderation_status = 'in_moderation'
         if self.request.user.is_authenticated:
-            # Для авторизованных пользователей: отчеты на модерации показываются, только если они принадлежат текущему пользователю
             queryset = queryset.exclude(Q(status=moderation_status) & ~Q(user=self.request.user))
         else:
-            # Для неавторизованных пользователей: полностью исключаем отчеты на модерации
             queryset = queryset.exclude(status=moderation_status)
 
         return queryset
 
+    def get_filter_context(self):
+        """
+        Формирует словарь с общими элементами контекста для фильтров.
+        """
+        return {
+            'status_filter': self.request.GET.get('status'),
+            'category_filter': self.request.GET.get('category'),
+            'time_filter': self.request.GET.get('time_filter'),
+            'is_mine': self.request.GET.get('is_mine'),
+            'search_query': self.request.GET.get('text', ''),
+            'statuses': Report.STATUS_CHOICES,
+            'categories': Topic.objects.values_list('id', 'title'),
+        }
+
+# Представление с картой
+class Map(ReportFilterMixin, TemplateView):
+    template_name = 'map.html'
+
     def get_context_data(self, **kwargs):
-        """
-        Добавление фильтров и доступных статусов/категорий в контекст для отображения в форме.
-        """
         context = super().get_context_data(**kwargs)
-        context['status_filter'] = self.request.GET.get('status')
-        context['category_filter'] = self.request.GET.get('category')
-        context['time_filter'] = self.request.GET.get('time_filter')
-        context['is_mine'] = self.request.GET.get('is_mine')
-        context['search_query'] = self.request.GET.get('text', '')
+        context['reports'] = self.get_filtered_reports()  # Передаем отфильтрованные отчеты
+        context.update(self.get_filter_context())         # Добавляем общие элементы фильтра
+        return context
 
-        # Получаем доступные статусы и категории из модели
-        context['statuses'] = Report.STATUS_CHOICES
-        context['categories'] = Topic.objects.values_list('id', 'title')
+# Представление с перечнем отчетов
+class Reports(ReportFilterMixin, ListView):
+    model = Report
+    template_name = 'reports.html'
+    context_object_name = 'reports'
+    paginate_by = 10  # Количество отчетов на одной странице
 
+    def get_queryset(self):
+        # Возвращаем отфильтрованные отчеты, отсортированные по дате обновления (по убыванию)
+        return self.get_filtered_reports().order_by('-updated_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_filter_context())
         return context
 
 # Стартовая страница для этапа 1 добавления отчета
@@ -265,39 +275,13 @@ class Step3View(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["hide_report_button"] = True
-        request = self.request
+        upload_url = self.request.build_absolute_uri('reports:upload')  # Формируем абсолютный URL
 
-        # Получаем данные из сессии или запроса
-        latitude = request.session.get("latitude") or request.GET.get("latitude")
-        longitude = request.session.get("longitude") or request.GET.get("longitude")
-        selected_topic_id = request.session.get("selected_topic") or request.GET.get("selected_topic")
-
-        # Проверка существования выбранной темы
-        topic = None
-        if selected_topic_id:
-            try:
-                topic = Topic.objects.get(pk=int(selected_topic_id))
-            except (ValueError, Topic.DoesNotExist):
-                topic = None
-
-        # Обратное геокодирование, если адрес отсутствует
-        address = request.session.get("address")
-        if not address and latitude and longitude:
-            address = self.reverse_geocode(latitude, longitude)
 
         # Передаем данные в контекст
-        form = ReportForm(initial={
-            'topic_id': selected_topic_id,
-            'latitude': latitude,
-            'longitude': longitude,
-            'address': address,
-        })
+        form = ReportForm()
         context.update({
-            "topic": topic,
-            "latitude": latitude,
-            "longitude": longitude,
-            "address": address,
-            "location": {"lat": latitude, "lon": longitude, "address": address},
+            "upload_url": upload_url,
             "form": form,  # Передаем форму в контекст
         })
         return context
@@ -319,24 +303,46 @@ class Step3View(TemplateView):
         return "Адрес не найден"
 
     def post(self, request, *args, **kwargs):
-        form = ReportForm(request.POST, request.FILES)
+
+        form = ReportForm(request.POST)
         if form.is_valid():
-            # Сохранение отчета
             report = form.save(commit=False)
             report.user = request.user
             report.save()
-
-            # Сохранение изображения (если оно есть)
-            image = request.FILES.get("image")
-            if image:
-                ReportImage.objects.create(report=report, image=image)
-
-
-            messages.success(request, "Ваш отчет успешно создан!")
-            return redirect('reports:report_detail', pk=report.id)  # перенаправление на страницу отчета
+            return JsonResponse({"status": "success", "report_id": report.id})
         else:
-            messages.error(request, "Ошибка в данных формы.")
-            return redirect(request.path)
+            errors = form.errors.as_json()
+            return JsonResponse({"status": "error", "errors": errors}, status=400)
 
+def images_upload(request):
+    if request.method == "POST" and request.FILES.get("file"):
+        file = request.FILES["file"]
+        report_id = request.POST.get("report_id")  # Получаем ID отчета
 
+        if not report_id:
+            return JsonResponse({"error": "Не указан ID отчета"}, status=400)
 
+        try:
+            report = Report.objects.get(id=report_id)
+        except Report.DoesNotExist:
+            return JsonResponse({"error": "Отчет не найден"}, status=404)
+
+        # Проверяем, не больше ли 5 картинок у отчета
+        if report.images.count() >= 5:
+            return JsonResponse({"error": "Нельзя загружать больше 5 изображений"}, status=400)
+
+        # Создаем папку с ID отчета
+        folder_path = f"reports/{report_id}/"
+        if not default_storage.exists(folder_path):
+            os.makedirs(default_storage.path(folder_path), exist_ok=True)
+
+        # Сохраняем файл в папку отчета
+        file_name = f"{folder_path}{file.name}"
+        saved_path = default_storage.save(file_name, ContentFile(file.read()))
+
+        # Создаем объект ReportImage
+        report_image = ReportImage.objects.create(report=report, image=saved_path)
+
+        return JsonResponse({"status": "success", "file_url": report_image.image.url})
+
+    return JsonResponse({"error": "Файл не найден"}, status=400)

@@ -33,7 +33,10 @@
         <div class="sign-in">
             {% if user.is_authenticated %}
                 <div class="dropdown">
-                    <button class="dropbtn">👤{{ user.full_name|split_first }}</button>
+<button class="dropbtn">
+  👤{{ user.full_name|split_first }}
+</button>
+
                     <div class="dropdown-content">
                         <form method="get" action="{% url 'users:profile' %}">
                             <button type="submit">Профиль</button>

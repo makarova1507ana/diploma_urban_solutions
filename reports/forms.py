@@ -94,7 +94,7 @@ class ReportForm(forms.ModelForm):
     )
     title = forms.CharField(
         min_length=5,
-        max_length=255,
+        max_length=100,
         required=True,
         label="Название проблемы",
         widget=forms.TextInput(attrs={"class": "form-control"})
@@ -110,32 +110,16 @@ class ReportForm(forms.ModelForm):
     address = forms.CharField(
         required=True,
         label="Адрес",
-        widget=forms.TextInput(attrs={"class": "form-control", "readonly": "readonly"})
+        widget=forms.TextInput(attrs={"class": "form-control", "readonly": "readonly", "style": "display: none;"})
     )
     description = forms.CharField(
         required=False,
         max_length=350,
         label="Описание проблемы",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
-    )
-    image = forms.ImageField(
-        required=False,
-        widget=forms.ClearableFileInput(attrs={"class": "form-control"}),
-        label="Фотография"
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 4, "style": "resize: none;"})
     )
 
     class Meta:
         model = Report
-        fields = ["category", "title", "latitude", "longitude", "address", "description", "image"]
-    # def clean_images(self):
-    #     images = self.files.getlist("images")
-    #
-    #     if len(images) > 5:
-    #         raise forms.ValidationError("Вы можете загрузить не более 5 изображений.")
-    #
-    #     max_size = 5 * 1024 * 1024  # 5MB
-    #     for image in images:
-    #         if image.size > max_size:
-    #             raise forms.ValidationError(f"Файл {image.name} превышает допустимый размер 5MB.")
-    #
-    #     return images
+        fields = ["category", "title", "latitude", "longitude", "address", "description"]
+

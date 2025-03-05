@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
+{% block additionalHead %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
 
+
+{% endblock %}
 {% block title %}Результаты{% endblock %}
 
 {% block pageTitle %}
@@ -11,7 +15,7 @@
 <div class="container">
 
     <!-- Форма фильтров -->
-    <form method="get" class="mb-4">
+    <form method="get" class="mb-4" style="margin-bottom:10px;">
         <div class="row">
             <!-- Фильтр по статусу -->
             <div class="col-md-3">
@@ -30,11 +34,11 @@
             <div class="col-md-3">
                 <label for="category">Категория</label>
                 <input list="categories" name="category" id="category" class="form-control"
-                       value="{{ category_id }}">
+                       value="{% if category_filter and category_filter != 'None' %}{{ category_filter }}{% endif %}">
                 <datalist id="categories">
                     <option value="">Все</option>
                     {% for category_id, category_title in categories %}
-                    <option value="{{ category_id }}">{{ category_title }}</option>
+                    <option value="{{ category_title }}">{{ category_title }}</option>
                     {% endfor %}
                 </datalist>
             </div>
@@ -60,18 +64,17 @@
                 </div>
             </div>
 
-            <div class="col-md-3 mt-3">
-                <button type="submit" class="btn btn-primary">Применить фильтры</button>
-            </div>
+
         </div>
     </form>
 
     <div class="row">
+        <hr style="color:#0F3272;">
         {% for report in reports %}
         <div class="col-md-12 mb-4">
-            <div class="report d-flex justify-content-between align-items-center">
+            <a href="{% url 'reports:report_detail' report.id %}" style="text-decoration:none;"> <div class="report d-flex justify-content-between align-items-center">
                 <div class="report-info">
-                    <h3 class="report-title">{{ report.title }}</h3>
+                    <h3 class="report-title">{{ report.title|truncatechars:45 }}</h3>
                     <p><strong>Статус:</strong> {{ report.get_status_display }}</p>
                     <p><strong>Категория:</strong> {{ report.category }}</p>
                     <p><strong>Дата создания:</strong> {{ report.created_at }}</p>
@@ -80,36 +83,67 @@
                 </div>
                 <div class="image-container">
                     {% with report.images.first as image %}
-                    <a href="{% url 'reports:report_detail' report.id %}">
+
                         {% if image %}
                         <img src="{{ image.image.url }}" alt="{{ report.title }}" class="img-fluid">
                         {% else %}
                         <img src="{% static 'images/1.jpg' %}" alt="Default Image" class="img-fluid">
                         {% endif %}
                         <div class="overlay">Посмотреть</div>
-                    </a>
+
                     {% endwith %}
                 </div>
-            </div>
+            </div><hr style="color:#0F3272;"> </a>
         </div>
         {% empty %}
         <p>Нет доступных отчетов для отображения.</p>
         {% endfor %}
     </div>
 
-    <!-- Пагинация -->
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; первая</a>
-            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
-            {% endif %}
-            <span class="current">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.</span>
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
+<!-- Пагинация -->
+<div class="pagination" style="text-align:center; margin-top: 20px;">
+    {% if page_obj.has_previous %}
+        <a href="?page=1" class="pagination-btn" style="color:#0F3272; padding: 5px 15px; text-decoration: none; border: 1px solid #0F3272; border-radius: 5px; margin-right: 5px;">&laquo; первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="pagination-btn" style="color:#0F3272; padding: 5px 15px; text-decoration: none; border: 1px solid #0F3272; border-radius: 5px; margin-right: 5px;">предыдущая</a>
+    {% endif %}
+
+    <span class="pagination-info" style="padding: 5px 15px; color:#0F3272; border: 1px solid #0F3272; border-radius: 5px; margin-right: 5px;">
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="pagination-btn" style="color:#0F3272; padding: 5px 15px; text-decoration: none; border: 1px solid #0F3272; border-radius: 5px; margin-left: 5px;">следующая</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-btn" style="color:#0F3272; padding: 5px 15px; text-decoration: none; border: 1px solid #0F3272; border-radius: 5px; margin-left: 5px;">последняя &raquo;</a>
+    {% endif %}
 </div>
+
+
+{% endblock %}
+
+
+
+
+{% block scripts %}
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Находим форму с фильтрами
+    var filterForm = document.querySelector("form.mb-4");
+
+    if (filterForm) {
+
+        // Получаем все элементы select и input внутри формы
+        var filterElements = filterForm.querySelectorAll("select, input");
+        // Добавляем обработчик события change ко всем элементам фильтра
+        filterElements.forEach(function(element) {
+            element.addEventListener("change", function() {
+                filterForm.submit();
+            });
+        });
+    }
+});</script>
+
 {% endblock %}

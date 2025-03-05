@@ -43,6 +43,6 @@ urlpatterns = [
     # Регистрация пользователя
     path('register/', views.RegisterUser.as_view(), name='register'),
 
-    # Профиль пользователя (закомментирован, так как не реализован)
+    # Профиль пользователя
     path('profile/', views.ProfileUser.as_view(), name='profile'),
 ]

@@ -3,6 +3,9 @@
 {% block additionalHead %}
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.css" rel="stylesheet">
+    <!-- Подключаем плагин для предпросмотра изображений -->
+    <link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.3.1/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block title %}Отчет{% endblock %}
@@ -11,14 +14,21 @@
 
 {% block content %}
 {% if not report.status == 'in_moderation' or user.is_authenticated and report.user == user %}
+<style>
+    p, h2{
+    word-break: break-all;}
+    p{
+    font-size: 1.2em;
+    }
 
+</style>
     <div class="report-details">
         <h2>{{ report.title }}</h2>
 
 
         <!-- Описание проблемы -->
         {% if report.description %}
-            <p><strong>Описание:</strong> {{ report.description }}</p>
+            <p ><strong>Описание:</strong> {{ report.description }}</p>
         {% endif %}
 
         <!-- Статус -->
@@ -39,21 +49,32 @@
         <!-- Карта с маркером -->
         <div id="map" style="height: 400px; display: none;"></div>
 
-        <!-- Показываем изображения, привязанные к отчету -->
-        {% if report_image %}
-        {% for report_image in report_images %}
-        <div class="image-container">
-            {% if report_image.image.url %}
-            <img src="{{ report_image.image.url }}" alt="Изображение проблемы" class="report-image">
+        <!-- Галерея изображений -->
+        {% if report_images %}
+        <h3> Фото </h3>
+        <hr>
+        <div class="gallery">
 
-            {% endif %}
+            {% for report_image in report_images %}
+            <div class="gallery-item">
+                {% if report_image.image.url %}
+                <img src="{{ report_image.image.url }}" alt="Изображение проблемы" class="gallery-image"
+                     onclick="openModal('{{ report_image.image.url }}')">
+                {% endif %}
+            </div>
             {% endfor %}
 
         </div>
-        <div class="image-container">
+        <hr>
         {% else %}
-            <img src="{% static 'images/1.jpg' %}" alt="Изображение не доступно" class="report-image"> </div>
+        <h3> Нет прикрепленных фото к этой проблеме</h3>
         {% endif %}
+        <!-- Модальное окно для увеличенного изображения -->
+        <div id="imageModal" class="modal" style="display: none;">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img class="modal-content" id="modalImage">
+        </div>
+
         <!-- Комментарии -->
         <div class="comments-section">
             <h3>Комментарии</h3>
@@ -82,9 +103,9 @@
 
                     <!-- Поле для текста комментария -->
                     <p>
-                        <label for="text">Ваш комментарий:</label>
-                        <textarea id="text" name="text" rows="4" cols="50" placeholder="Введите ваш комментарий...">{{ form.text.value }}</textarea>
-                    </p>
+                        <p><textarea id="text" name="text" rows="5" cols="50" placeholder="Введите ваш комментарий..." style="resize: none; width:100%;" maxlength="350">{{ form.text.value }}</textarea>
+                <p class="info">ℹ️ Максимум 350 символов</p>
+                </p>
 
                     <!-- Показываем ошибки, если они есть -->
                     {% if errors %}
@@ -105,12 +126,11 @@
 
                     <!-- Поле для загрузки изображений -->
                     <p>
-                        <label for="images">Выберите или перетащите фотографии:</label>
-                        <input id="images" type="file" name="images" accept=".jpg, .jpeg, .png, .heic, .heif" multiple>
+                        <input type="file" id="filepond" class="filepond" name="file" multiple>
                     </p>
-                    <p>Фотографий должно быть не больше 5 штук, форматом JPG, JPEG, PNG, HEIC, HEIF, размером не более 5 МБ каждая.</p>
+                    <p class="info">ℹ️ Выберите или перетащите фотографию / группу фотографий. Фотографий должно быть не больше 5 штук, форматом jpg, jpeg png, heic, heif, размером не более 5 мб каждая</p>
 
-                    <button type="submit">Отправить комментарий</button>
+                    <button type="submit" class="btn-comment">Отправить комментарий</button>
                 </form>
             </div>
         {% else %}
@@ -128,6 +148,19 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+    function openModal(imageSrc) {
+    var modal = document.getElementById("imageModal");
+    var modalImage = document.getElementById("modalImage");
+    modal.style.display = "flex";
+    modalImage.src = imageSrc;
+
+}
+
+function closeModal() {
+    var modal = document.getElementById("imageModal");
+    modal.style.display = "none";
+}
+
     sessionStorage.clear();
 
     document.getElementById('showMapButton').addEventListener('click', function() {
@@ -157,5 +190,11 @@
     });
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.5/dist/compressor.min.js"></script>
 
+    <!-- Подключаем JavaScript для FilePond и плагинов -->
+    <script src="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.3.1/dist/filepond-plugin-image-preview.min.js"></script>
+
+    <script src="{% static 'js/step3.js' %}"></script>
 {% endblock %}

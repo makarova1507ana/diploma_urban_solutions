@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}О портале{% endblock %}
 
 {% block pageTitle %}
@@ -7,6 +8,12 @@
 {% endblock %}
 
 {% block content %}
+<style>
+  p, li {
+    font-size: 1.2em;
+    text-align: justify;
+  }
+</style>
 <div class="container">
   <h1 class="text-center mb-4">Портал «Городские решения»</h1>
   <p>
@@ -25,7 +32,67 @@
   <p>
     Кроме того, на портале предусмотрена возможность следить за статусом решения ваших заявок и получать уведомления о ходе устранения проблемы.
   </p>
+
+  <!-- Раздел статистики -->
+  <h2 class="mt-5">Статистика за последние 7 дней</h2>
+  <p><strong>Проблем зарегистрировано:</strong> {{ last_7_days_reports }}</p>
+  <p><strong>Обновлений по проблемам:</strong> {{ last_7_days_updates }}</p>
+  <p><strong>Проблем решено:</strong> {{ last_7_days_resolved }}</p>
+  <p><strong>Среднее время решения проблемы:</strong> {{ avg_resolution_hours }} часов</p>
+
+  <h3 class="mt-3">Разбивка по категориям:</h3>
+  <ul>
+    {% for category in top_categories %}
+      <li>{{ category.category__title }} - {{ category.count }} отчетов</li>
+    {% empty %}
+      <li>Нет данных</li>
+    {% endfor %}
+  </ul>
+
+  <!-- График динамики количества проблем по месяцам -->
+  <h2 class="mt-5">Динамика проблем за последний год</h2>
+  <canvas id="reportsChart"></canvas>
+
 </div>
-какие-то документы надо дать сюда
+
+<!-- Подключение Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var ctx = document.getElementById("reportsChart").getContext("2d");
+
+    // Получаем данные, переданные из Python
+    var months = JSON.parse('{{ months }}');
+    var reportCounts = JSON.parse('{{ report_counts }}');
+
+    var reportsChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: months,  // Метки по месяцам
+        datasets: [{
+          label: "Количество проблем",
+          data: reportCounts,
+          backgroundColor: "rgba(75, 192, 192, 0.2)",
+          borderColor: "rgba(75, 192, 192, 1)",
+          borderWidth: 2,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: { display: true, text: "Месяц" }
+          },
+          y: {
+            title: { display: true, text: "Количество проблем" },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  });
+</script>
 
 {% endblock %}

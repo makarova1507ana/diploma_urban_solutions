@@ -18,9 +18,9 @@
         {% if related_reports %}
             {% for report in related_reports %}
                 <div class="col-md-12 mb-4">
-                    <div class="report d-flex justify-content-between align-items-center">
+                    <a href="{% url 'reports:report_detail' report.id %}" style="text-decoration: none;"><div class="report d-flex justify-content-between align-items-center">
                         <div class="report-info">
-                            <h3 class="report-title">{{ report.title }}</h3>
+                            <h3 class="report-title">{{ report.title|truncatechars:50 }}</h3>
                             <p><strong>Статус:</strong> {{ report.get_status_display }}</p>
                             <p><strong>Категория:</strong> {{ report.category }}</p>
                             <p><strong>Дата создания:</strong> {{ report.created_at }}</p>
@@ -29,17 +29,17 @@
                         </div>
                         <div class="image-container">
                             {% with report.images.first as image %}
-                                <a href="{% url 'reports:report_detail' report.id %}">
+
                                     {% if image %}
                                         <img src="{{ image.image.url }}" alt="{{ report.title }}" class="img-fluid">
                                     {% else %}
                                         <img src="{% static 'images/1.jpg' %}" alt="Default Image" class="img-fluid">
                                     {% endif %}
                                     <div class="overlay">Посмотреть</div>
-                                </a>
+
                             {% endwith %}
                         </div>
-                    </div>
+                    </div> </a>
                 </div>
             {% endfor %}
         {% else %}

@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css" />
 
+
 {% endblock %}
 {% block title %}Карта{% endblock %}
 
@@ -12,28 +13,104 @@
 {% endblock %}
 
 {% block content %}
+<!-- Форма фильтров -->
+    <form method="get" class="mb-4" style="margin-bottom: 10px;">
+          <div id="filterContainer">
 
+        <div class="row">
+            <!-- Фильтр по статусу -->
+            <div class="col-md-3">
+                <label for="status">Статус</label>
+                <select name="status" id="status" class="form-control" >
+                    <option value="">Все</option>
+                    {% for status, status_display in statuses %}
+                    <option value="{{ status }}" {% if status|stringformat:"s" in status_filter %}selected{% endif %}>
+                    {{ status_display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Фильтр по категории -->
+            <div class="col-md-3">
+                <label for="category">Категория</label>
+                <input list="categories" name="category" id="category" class="form-control" value="{% if category_filter and category_filter != 'None' %}{{ category_filter }}{% endif %}">
+
+                <datalist id="categories" multiple>
+                    <option value="">Все</option>
+                    {% for category_id, category_title in categories %}
+                    <option value="{{ category_title }}">{{ category_title }}</option>
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <!-- Фильтр по времени -->
+            <div class="col-md-3">
+                <label for="time_filter">Период</label>
+                <select name="time_filter" id="time_filter" class="form-control">
+                    <option value="">Все</option>
+                    <option value="last_day" {% if time_filter|stringformat:"s" == "last_day" %}selected{% endif %}>Последний день</option>
+                    <option value="last_week" {% if time_filter|stringformat:"s" == "last_week" %}selected{% endif %}>Последняя неделя</option>
+                    <option value="last_month" {% if time_filter|stringformat:"s" == "last_month" %}selected{% endif %}>Последний месяц</option>
+                    <option value="last_year" {% if time_filter|stringformat:"s" == "last_year" %}selected{% endif %}>Последний год</option>
+                </select>
+            </div>
+
+            <!-- Фильтр "Мои отчёты" -->
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="is_mine" name="is_mine" value="1"
+                           {% if is_mine %}checked{% endif %}>
+                    <label class="form-check-label" for="is_mine">Мои отчёты</label>
+                </div>
+            </div>
+
+
+        </div>
+          </div>
+    </form>
 <!-- Контейнер для карты -->
-<div id="map" style="height: 600px;"></div>
+<div id="map" style="height: 600px; position: relative;"></div>
 
 <!-- Панель для отображения подробной информации о проблеме -->
-<div id="infoPanel" style="padding: 10px; background-color: #f9f9f9; border-top: 2px solid #ddd; font-size: 16px;">
-    <h4>Подробности о проблеме</h4>
+<div id="infoPanel" >
+    <h4 id="info_title" style="display:none; margin-top: 0;">Подробности о проблеме</h4>
     <div id="problemTitle"><strong>Выберите маркер для подробной информации</strong></div>
     <div id="problemStatus"></div>
+    <div id="topic"></div>
+
     <div id="problemDescription"></div>
-    <div id="problemPhoto"></div>
     <div id="problemDate"></div>
-    <a id="problemLink" href="#"  style="display:none;">Перейти к проблеме</a>
+    <a id="problemLink" href="#"  style="display:none;"> <button>Перейти к проблеме</button></a>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
 <script>
-// Инициализация карты
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Находим форму с фильтрами
+    var filterForm = document.querySelector("form.mb-4");
+
+    if (filterForm) {
+
+        // Получаем все элементы select и input внутри формы
+        var filterElements = filterForm.querySelectorAll("select, input");
+        // Добавляем обработчик события change ко всем элементам фильтра
+        filterElements.forEach(function(element) {
+            element.addEventListener("change", function() {
+                filterForm.submit();
+            });
+        });
+    }
+});
+
+    // Инициализация карты
 var map = L.map('map').setView([48.7080, 44.5133], 10); // Центр карты: Волгоград
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -43,22 +120,23 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Добавляем маркеры для каждой проблемы
 {% for report in reports %}
     var marker = L.marker([{{ report.latitude }}, {{ report.longitude }}]).addTo(map)
-        .bindPopup("<b>{{ report.title }}</b><br>{{ report.description }}")
+        .bindPopup("<div class='pop-up-content'><b>{{ report.title|truncatechars:45 }}</b><br><b>Дата обновления: </b>{{ report.updated_at|date:'d.m.Y' }}<br><b>Категория: </b>{{ report.category }} </div>")
         .on('click', function() {
             // При клике на маркер обновляем информацию в панели
-            document.getElementById("problemTitle").innerHTML = "<strong>" + "{{ report.title }}" + "</strong>";
+            document.getElementById("problemTitle").innerHTML = "<strong>" + "{{ report.title|truncatechars:50 }}" + "</strong>";
             document.getElementById("problemStatus").innerHTML = "<strong>Статус:</strong> {{ report.get_status_display }}";
-            document.getElementById("problemDescription").innerHTML = "<strong>Описание:</strong> {{ report.description }}";
-
-            {% if report.photo %}
-                document.getElementById("problemPhoto").innerHTML = "<strong>Фото:</strong><br><img src='{{ report.photo.url }}' style='max-width: 100%; height: auto;'/>";
-            {% else %}
-                document.getElementById("problemPhoto").innerHTML = "<strong>Фото:</strong> Нет фото";
+            {% if report.description %}
+            document.getElementById("problemDescription").innerHTML = "<strong>Описание:</strong> {{ report.description|truncatechars:50 }}";
             {% endif %}
+            document.getElementById("topic").innerHTML = "<strong>Категория:</strong> {{ report.category }}";
 
-            document.getElementById("problemDate").innerHTML = "<strong>Дата создания:</strong> {{ report.created_at }}<br><strong>Дата обновления:</strong> {{ report.updated_at }}";
+
+
+            document.getElementById("problemDate").innerHTML = "<strong>Дата создания:</strong> {{ report.created_at|date:'d.m.Y' }}<br><strong>Дата обновления:</strong> {{ report.updated_at|date:'d.m.Y' }}";
             document.getElementById("problemLink").href = "{% url 'reports:report_detail' report.pk %}";
             document.getElementById("problemLink").style.display = "block"; // Показываем ссылку
+            document.getElementById("info_title").style.display = "block"; // Показываем ссылку
+
         });
 {% endfor %}
 
@@ -68,6 +146,7 @@ L.control({position: 'topright'}).onAdd = function (map) {
     div.innerHTML = '<h4>Проблемы города Волгограда</h4>';
     return div;
 }.addTo(map);
+
 
 </script>
 {% endblock %}

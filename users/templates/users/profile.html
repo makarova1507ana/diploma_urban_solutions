@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
+{% block title %}Профиль{% endblock %}
 
+{% block pageTitle %}
+Профиль
+{% endblock %}
 {% block content %}
-<h1>Профиль</h1>
 
+
+<!-- Форма редактирования профиля -->
 <form method="post">
     {% csrf_token %}
     <div class="form-error">{{ form.non_field_errors }}</div>
@@ -11,10 +16,48 @@
     <div class="form-error">{{ f.errors }}</div>
     {% endfor %}
 
-    <p><button type="submit">Сохранить</button></p>
+    <p><button type="submit" class="btn-save-profile">Сохранить</button></p>
 </form>
 
+<!-- Ссылка на смену пароля -->
+<p><a href="{% url 'users:password_change' %}"><button class="btn-change-password">Сменить пароль</button></a></p>
 
-<p><a href="{% url 'users:password_change' %}">Сменить пароль</a></p>
+<!-- Статистика по отчетам пользователя -->
+<h2>Информация о ваших отчетах</h2>
+<p><strong>Общее количество отчетов:</strong> {{ total_reports }}</p>
+
+<h3>Статистика по статусам</h3>
+<ul>
+    {% for status, count in status_counts.items %}
+    <li>{{ status }}: {{ count }}</li>
+    {% empty %}
+    <li>Нет отчетов.</li>
+    {% endfor %}
+</ul>
+
+<h2>Ваши отчеты</h2>
+<table class="table-reports">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Дата обновления</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in user_reports %}
+
+        <tr>
+            <td><a href="{% url 'reports:report_detail' report.id %}">{{ report.title|truncatechars:45 }}</a></td>
+            <td><a href="{% url 'reports:report_detail' report.id %}">{{ report.updated_at|date:"d.m.Y H:i" }}</a></td>
+            <td><a href="{% url 'reports:report_detail' report.id %}">{{ report.status }}</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">У вас нет отчетов.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 {% endblock %}

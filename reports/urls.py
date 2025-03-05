@@ -17,6 +17,7 @@ urlpatterns = [
     path('report/<int:report_id>/add_comment/', reports.AddCommentView.as_view(), name='add_comment'),
 
     path('report/map/', reports.Map.as_view(), name='map'),
+    path('upload/', reports.images_upload, name='upload')
 
     # re_path(r"^archive/(?P<year>(1|2)\d{3})/$", reports.archive),
 
